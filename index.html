@@ -59,7 +59,7 @@ input[type=text],input[type=password],input[type=number]{width:100%;background:#
       <button class="btn b-stone !p-2 !px-3" onclick="openSettings()" aria-label="הגדרות">⚙️</button>
     </div>
     <div class="flex items-end justify-between mt-3">
-      <div><div id="rankIcon" class="text-4xl leading-none"></div><div id="rankName" class="font-black text-lg text-amber-400"></div></div>
+      <div onclick="rankMap()" style="cursor:pointer"><div id="rankIcon" class="text-4xl leading-none"></div><div id="rankName" class="font-black text-lg text-amber-400"></div></div>
       <div class="text-left"><span id="grains" class="text-4xl font-black text-amber-500">0</span> <span class="text-2xl">🌾</span></div>
     </div>
     <div class="h-5 bg-stone-900 rounded-full mt-3 overflow-hidden border-2 border-amber-900"><div id="bar" class="h-full bg-gradient-to-l from-amber-400 to-amber-600 rounded-full transition-all duration-500" style="width:0"></div></div>
@@ -69,6 +69,7 @@ input[type=text],input[type=password],input[type=number]{width:100%;background:#
 
   <section class="tab on space-y-4" data-t="home">
     <button class="btn b-red w-full text-xl py-4" onclick="junk(0)">בא לי ג'אנק 🛑</button>
+    <button class="btn b-stone w-full" onclick="rankMap()">מפת דרגות ומסלול התקדמות 🗺️</button>
     <div class="card">
       <h2 class="font-black text-lg mb-2">📸 עין הנמלה (Gemini)</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -95,10 +96,13 @@ input[type=text],input[type=password],input[type=number]{width:100%;background:#
   </section>
 
   <section class="tab space-y-4" data-t="work">
+    <div id="fbTop"></div>
     <div class="card"><h2 class="font-black text-lg mb-1">🏋️ תוכנית פרוגרסיבית (משקל גוף בלבד)</h2>
       <p class="text-sm text-amber-200/80 mb-3">השלם תרגיל 3 פעמים והרמה עולה אוטומטית. פעם אחת ביום לכל תרגיל.</p>
       <div id="ex" class="space-y-3"></div></div>
+    <div id="stCard"></div>
     <div class="card"><h2 class="font-black text-lg mb-2">➕ בונוסים</h2><div id="tasks" class="space-y-2"></div></div>
+    <div id="fbBot"></div>
   </section>
 
   <section class="tab space-y-4" data-t="food">
@@ -139,7 +143,7 @@ input[type=text],input[type=password],input[type=number]{width:100%;background:#
 <script>
 const $=id=>document.getElementById(id);
 const K='antfit_v1';
-const R=[[0,'עצלן בתרדמת','😴'],[100,'נמלה מתעוררת','🥱'],[300,'נמלת פועלת','🐜'],[700,'נמלת חיל','💪'],[1500,'מפקדת מחלקה','🎖️'],[3000,'שומרת המלכה','🛡️'],[6000,'שליט ממלכת הנמלים','👑']];
+const R=[[0,'עצלן בתרדמת','😴'],[250,'נמלה מתעוררת','🥱'],[700,'נמלת פועלת','🐜'],[1500,'נמלת חיל','💪'],[3000,'מפקדת מחלקה','🎖️'],[5500,'שומרת המלכה','🛡️'],[9000,'שליט ממלכת הנמלים','👑']];
 const T=[['wk','יציאה להליכה – 20 דקות','🚶',25],['st','מתיחות – 5 דקות','🧘',10]];
 const EX=[
 ['sq','סקוואטים','🦵',['12 חזרות','15 חזרות','20 חזרות','סקוואט קפיצה × 12'],'עמוד ברוחב כתפיים, שב אחורה כאילו על כיסא, הברכיים לא עוקפות את האצבעות, העקבים על הרצפה, חזור למעלה.','ירכיים וישבן – נגד ישבן רפוי'],
@@ -162,7 +166,7 @@ const SYS=`אתה יועץ תזונה וכושר ביתי ברמה הגבוהה 
 const JK=[['עצור! אל תעשה את זה. שתה עכשיו כוס מים גדולה','💧 שתיתי כוס מים','drink()'],['תחשוב על המטרה שלך ועל הדרך שכבר עברת. קח פרי או ירק במקום!','🍎 לקחתי פרי / ירק','add(15,"בחרתי פרי או ירק במקום ג׳אנק 🍎")'],['זה רק דחף של 5 דקות. קום לסיבוב של 2 דקות בבית!','🚶 יצאתי לסיבוב','add(20,"סיבוב של 2 דקות נגד דחף 🚶")']];
 const NOTE=['💧 זמן לכוס מים, נמלה!','🐜 קום לתרגיל קצר – גרגרים מחכים לך!','🌾 עוד בחירה בריאה אחת ואתה מתקדם לדרגה הבאה!','☕ אחרי 16:00 – עוצרים קפה!'];
 let G={key:'',users:[],cur:'',nm:'on'},S;
-const DEF=()=>({grains:0,tasks:{},water:{},wb:{},hist:[],prog:{},coffee:{},w:{start:0,cur:0,goal:0,log:[]},chat:[],meals:{},ns:{},lastW:0,undo:[],pf:null,fd:{},key:''});
+const DEF=()=>({grains:0,tasks:{},water:{},wb:{},hist:[],prog:{},coffee:{},w:{start:0,cur:0,goal:0,log:[]},chat:[],meals:{},ns:{},lastW:0,undo:[],pf:null,fd:{},st:{},fb:{},key:''});
 function ld(){S=DEF();try{Object.assign(S,JSON.parse(localStorage.getItem('antfit_u_'+G.cur))||{})}catch(e){}if(!S.w||!S.w.log)S.w={start:0,cur:0,goal:0,log:[]};if(!S.undo)S.undo=[];S.key=G.key}
 
 
@@ -192,7 +196,7 @@ function render(){
   $('coffeeN').textContent=cf+' כוסות · ~'+cf*30+' קל׳';
   const late=new Date().getHours()>=16;
   $('coffeeMsg').innerHTML=late?'<b class="text-red-400">🛑 אחרי 16:00 – עוצרים קפה! זה פוגע בשינה ובדיאטה.</b>':'תזכורת: לא שותים קפה מ-16:00 ואילך.';
-  $('tasks').innerHTML=T.map(t=>'<button class="task'+(td[t[0]]?' done':'')+'" onclick="toggle(\''+t[0]+'\')"><span class="text-2xl">'+t[2]+'</span><span class="flex-1 font-bold">'+t[1]+'</span><span class="font-black text-amber-400">'+(td[t[0]]?'✅':'+'+t[3]+' 🌾')+'</span></button>').join('');
+  drawAct();$('tasks').innerHTML=T.map(t=>'<button class="task'+(td[t[0]]?' done':'')+'" onclick="toggle(\''+t[0]+'\')"><span class="text-2xl">'+t[2]+'</span><span class="flex-1 font-bold">'+t[1]+'</span><span class="font-black text-amber-400">'+(td[t[0]]?'✅':'+'+t[3]+' 🌾')+'</span></button>').join('');
   $('ex').innerHTML=EX.map(e=>{const p=S.prog[e[0]]||{lv:0,c:0},lv=Math.min(p.lv,e[3].length-1),done=td[e[0]];
     return '<div class="rounded-2xl border-2 p-3 '+(done?'border-emerald-600 bg-emerald-950/60':'border-amber-900 bg-stone-900/60')+'"><div class="flex items-center gap-2"><span class="text-3xl">'+e[2]+'</span><div class="flex-1"><div class="font-black">'+e[1]+' · רמה '+(lv+1)+'/'+e[3].length+'</div><div class="text-amber-300">'+e[3][lv]+'</div><div class="text-xs text-amber-200/70">להעלאת רמה: '+'🟧'.repeat(p.c)+'⬛'.repeat(Math.max(0,3-p.c))+'</div></div><button class="btn b-green !p-2 !px-3" onclick="doEx(\''+e[0]+'\')" '+(done?'disabled':'')+'>'+(done?'✅':'בוצע')+'</button></div><details class="mt-2 text-sm"><summary class="cursor-pointer text-amber-400">איך מבצעים?</summary><p class="mt-1">'+e[4]+'</p><p class="text-emerald-400 mt-1">מחזק: '+e[5]+'</p></details></div>'}).join('');
   $('meals').innerHTML=MEALS.map(m=>'<div class="rounded-xl bg-stone-900/60 border border-amber-900 p-3"><div class="font-black">'+m[0]+' '+m[1]+'</div><p class="text-sm mt-1">'+m[2]+'</p></div>').join('');drawFood();
@@ -344,6 +348,30 @@ async function anaMeal(id,file){
     FB[id]=0;add(v==='good'?30:5,v==='good'?'ארוחה בריאה: '+MN[id][1]+' 🥗':'עדכנתי '+MN[id][1]);
   }catch(e){FB[id]=0;ER[id]=(e&&e.message)||'שגיאת רשת – נסה שוב';drawFood()}
 }
+function rankMap(){let c=0;R.forEach((r,k)=>{if(S.grains>=r[0])c=k});const nx=R[c+1];
+  sheet('<h3 class="text-xl font-black mb-1">🗺️ מפת דרגות ומסלול התקדמות</h3><p class="text-sm text-amber-200/80 mb-4">יש לך <b class="text-amber-400">'+S.grains.toLocaleString('en-US')+' 🌾</b>'+(nx?' · חסרים '+(nx[0]-S.grains).toLocaleString('en-US')+' 🌾 לדרגה הבאה':' · הגעת לפסגה! 👑')+'</p>'+R.map((r,i)=>{const un=S.grains>=r[0],is=i===c,n2=R[i+1],pct=is&&n2?Math.round((S.grains-r[0])/(n2[0]-r[0])*100):0;return '<div class="flex gap-3"><div class="flex flex-col items-center"><div class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-2xl border-4 '+(is?'border-amber-400 bg-amber-900':un?'border-emerald-600 bg-emerald-950':'border-stone-600 bg-stone-800 opacity-60')+'">'+(is?'🐜':un?r[2]:'🔒')+'</div>'+(n2?'<div class="w-1 flex-1 min-h-[1.5rem] '+(S.grains>=n2[0]?'bg-emerald-600':is?'bg-amber-500':'bg-stone-600')+'"></div>':'')+'</div><div class="flex-1 pb-4"><div class="font-black '+(is?'text-amber-400 text-lg':un?'text-emerald-400':'text-stone-400')+'">'+r[2]+' '+r[1]+(is?' <span class="text-xs">(אתה כאן)</span>':'')+'</div><div class="text-sm text-amber-200/70">'+r[0].toLocaleString('en-US')+' 🌾 · '+(is?'דרגה נוכחית':un?'נפתחה ✔':'נעולה – חסרים '+(r[0]-S.grains).toLocaleString('en-US'))+'</div>'+(is&&n2?'<div class="h-3 bg-stone-900 rounded-full overflow-hidden border border-amber-900 mt-1"><div class="h-full bg-gradient-to-l from-amber-400 to-amber-600" style="width:'+pct+'%"></div></div>':'')+'</div></div>'}).join('')+'<button class="btn b-amber w-full mt-2" onclick="closeSheet()">סגור</button>')}
+let KM=false;
+function actKcal(n){return Math.round(n*(S.w.cur||75)*0.00057)}
+function actSync(){const n=Math.max(0,Math.round(+$('stIn').value||0));if(!KM)$('stK').value=n>0?actKcal(n):'';$('stDist').textContent=n>0?'📏 מרחק משוער: ~'+(n*0.00075).toFixed(1)+' ק״מ':''}
+function actKin(){KM=$('stK').value!=='';if(!KM)actSync()}
+function drawAct(){
+  const d=day(),st=S.st[d]||{n:0,k:0,g:0,m:0},fb=S.fb[d]||{},wed=new Date().getDay()===3,kf=fb.k||0,done=fb.done,tot=(st.k||0)+kf;
+  KM=!!st.m;
+  $('stCard').innerHTML='<div class="card"><h2 class="font-black text-lg mb-2">👟 מעקב צעדים וקלוריות יומי (משעון / טלפון)</h2><label class="text-sm">צעדים שבוצעו היום</label><input type="number" id="stIn" inputmode="numeric" placeholder="למשל 8000" value="'+(st.n||'')+'" oninput="actSync()" class="mb-2"><label class="text-sm">קלוריות שנשרפו היום (ישירות מהשעון 🔥)</label><input type="number" id="stK" inputmode="numeric" placeholder="נחשב אוטומטית מהצעדים" value="'+(st.k||'')+'" oninput="actKin()"><div id="stDist" class="text-sm text-amber-200/80 mt-1">'+(st.n>0?'📏 מרחק משוער: ~'+(st.n*0.00075).toFixed(1)+' ק״מ':'')+'</div><div class="h-4 bg-stone-900 rounded-full overflow-hidden border-2 border-amber-900 mt-2"><div class="h-full bg-emerald-600" style="width:'+Math.min(100,Math.round(st.n/100))+'%"></div></div><div class="text-sm mt-1">'+st.n.toLocaleString('en-US')+' / 10,000 צעדים</div><button class="btn b-green w-full mt-3" onclick="saveSteps()">עדכן ושמור פעילות יומית</button><div class="text-xs text-amber-200/70 mt-2">+10 🌾 על כל 2,000 צעדים · בונוס +40 🌾 ב-10,000+ · בהזנת קלוריות בלבד: +10 🌾 על כל 100 קל׳ (עד 60 ביום) · הרווחת היום: <b class="text-amber-400">'+st.g+' 🌾</b></div><div class="mt-3 rounded-xl bg-stone-900/60 border border-amber-900 p-2 text-sm"><b>סיכום קלוריות שרופות היום:</b> 🔥 ~'+tot+' קל׳ (פעילות '+(st.k||0)+(kf?' + כדורגל '+kf:'')+')</div></div>';
+  const fh='<div class="card '+(wed?'!border-amber-400 ring-4 ring-amber-500/50':'')+'"'+(wed?' style="background:linear-gradient(160deg,#92400e,#451a03)"':'')+'>'+(wed?'<div class="text-center font-black text-amber-300 mb-1">🔥 היום יום רביעי – כדורגל הערב! 🔥</div>':'')+'<h2 class="font-black '+(wed?'text-2xl':'text-lg')+' mb-2">⚽ כדורגל של יום רביעי</h2>'+(done?'<div class="text-emerald-400 font-black mb-2">✅ הלכת לכדורגל – +50 🌾</div>':'<p class="text-sm mb-2">'+(wed?'המשחק הערב! עדכן אחרי שחזרת.':'המשחק הקבוע: יום רביעי בערב.')+'</p>')+'<label class="text-sm">כמה קלוריות נשרפו במשחק (לפי שעון הספורט)</label><div class="flex gap-2 mb-2"><input type="number" id="fbK" inputmode="numeric" placeholder="למשל 600" value="'+(kf||'')+'">'+(done?'<button class="btn b-stone !px-3 text-sm" onclick="fbUpd()">שמור</button>':'')+'</div>'+(done?'':'<button class="btn b-amber w-full '+(wed?'text-lg py-4':'')+'" onclick="fbGo()">הלכתי לכדורגל הערב! ⚽ (+50 🌾)</button>')+'</div>';
+  $('fbTop').innerHTML=wed?fh:'';$('fbBot').innerHTML=wed?'':fh}
+function saveSteps(){
+  const d=day(),o=S.st[d]||{n:0,k:0,g:0,m:0},n=Math.max(0,Math.round(+$('stIn').value||0)),kv=Math.max(0,Math.round(+$('stK').value||0));
+  if(n>100000||kv>20000){toast('הזן ערכים תקינים');return}
+  if(!n&&!kv){toast('הזן צעדים או קלוריות');return}
+  const m=$('stK').value!==''&&(!n||kv!==actKcal(n))?1:0,k=kv||actKcal(n);
+  if(n===o.n&&k===o.k){toast('ללא שינוי');return}
+  snap('פעילות יומית');
+  const tg=n>0?Math.floor(n/2000)*10+(n>=10000?40:0):Math.min(60,Math.floor(k/100)*10),diff=tg-o.g;
+  S.st[d]={n,k,g:tg,m};
+  if(diff!==0)add(diff,diff>0?(n?'צעדים: '+n.toLocaleString('en-US')+' 👟 · ~'+k+' קל׳':'פעילות יומית: '+k+' קל׳ 🔥'):'');else{save();render()}}
+function fbGo(){const d=day();if((S.fb[d]||{}).done)return;const k=Math.max(0,Math.min(3000,Math.round(+$('fbK').value||0)));snap('כדורגל');S.fb[d]={done:1,k};add(50,'הלכתי לכדורגל ⚽'+(k?' · '+k+' קל׳ נשרפו':''))}
+function fbUpd(){const d=day(),f=S.fb[d];if(!f||!f.done)return;const k=Math.max(0,Math.min(3000,Math.round(+$('fbK').value||0)));snap('קלוריות כדורגל');f.k=k;add(0,'כדורגל: עודכנו '+k+' קל׳ 🔥')}
 function checkN(){
   if(G.nm==='off'||!('Notification' in window)||Notification.permission!=='granted')return;
   const n=new Date(),m=n.getHours()*60+n.getMinutes(),d=day(),td=S.tasks[d]||{},ml=S.meals[d]||{},now=Date.now();
@@ -366,8 +394,8 @@ async function enableNotif(){
 let OB={sex:'m',act:0};
 const ACT=['עצלן מוחלט','פעילות קלה','פעיל בינוני'];
 const cp=o=>JSON.parse(JSON.stringify(o===undefined?null:o));
-function snap(l){const d=day();S.undo.push({l,d,g:S.grains,tk:cp(S.tasks[d]),wa:S.water[d]||0,wb:S.wb[d]||0,cf:S.coffee[d]||0,ml:cp(S.meals[d]),fd:cp(S.fd[d]),pr:cp(S.prog),h:cp(S.hist)});S.undo=S.undo.slice(-10)}
-function undo(){const u=S.undo.pop();if(!u){toast('אין מה לבטל');return}S.grains=u.g;S.tasks[u.d]=u.tk||{};S.water[u.d]=u.wa;S.wb[u.d]=u.wb;S.coffee[u.d]=u.cf;S.meals[u.d]=u.ml||{};S.fd[u.d]=u.fd||{};S.prog=u.pr;S.hist=u.h;save();render();toast('↩️ בוטל: '+u.l)}
+function snap(l){const d=day();S.undo.push({l,d,g:S.grains,tk:cp(S.tasks[d]),wa:S.water[d]||0,wb:S.wb[d]||0,cf:S.coffee[d]||0,ml:cp(S.meals[d]),fd:cp(S.fd[d]),st:cp(S.st[d]),fb:cp(S.fb[d]),pr:cp(S.prog),h:cp(S.hist)});S.undo=S.undo.slice(-10)}
+function undo(){const u=S.undo.pop();if(!u){toast('אין מה לבטל');return}S.grains=u.g;S.tasks[u.d]=u.tk||{};S.water[u.d]=u.wa;S.wb[u.d]=u.wb;S.coffee[u.d]=u.cf;S.meals[u.d]=u.ml||{};S.fd[u.d]=u.fd||{};if('st' in u){S.st[u.d]=u.st||{n:0,g:0};S.fb[u.d]=u.fb||{}}S.prog=u.pr;S.hist=u.h;save();render();toast('↩️ בוטל: '+u.l)}
 function plan(){const p=S.pf;if(!p||!S.w.cur)return{cal:0,water:tgt()};const w=S.w.cur,bmr=10*w+6.25*p.h-5*p.age+(p.sex==='m'?5:-161),tdee=bmr*[1.2,1.375,1.55][p.act],def=S.w.goal<w?Math.min(500,tdee*0.2):0;return{cal:Math.round(Math.min(tdee,Math.max(tdee-def,p.sex==='m'?1500:1200))/10)*10,water:tgt()}}
 function profTxt(){const p=S.pf;if(!p)return'';const q=plan();return '\nנתוני המשתמש הפעיל: שם '+p.name+', '+(p.sex==='m'?'גבר':'אישה')+', גיל '+p.age+', גובה '+p.h+' ס״מ, משקל נוכחי '+S.w.cur+' ק״ג, משקל יעד '+S.w.goal+' ק״ג, רמת פעילות: '+ACT[p.act]+'. יעד קלורי יומי מומלץ ~'+q.cal+' קלוריות, יעד מים '+q.water+' כוסות. התאם כל ניתוח, כל גרסה חכמה וכל תוכנית קיזוז ביתית (חזרות, סבבים ודקות הליכה) במדויק לנתונים האלה, ופנה אליו בשמו.'}
 function setTop(){const B=(m,t)=>'<button class="btn '+(G.nm===m?'b-amber':'b-stone')+' w-full !p-2 text-sm" onclick="setNm(\''+m+'\')">'+t+'</button>',st=typeof Notification==='undefined'?'הדפדפן לא תומך בהתראות':Notification.permission==='granted'?'הרשאת התראות: אושרה ✔ (פועלות כל עוד האפליקציה פתוחה)':Notification.permission==='denied'?'ההתראות חסומות בדפדפן – לחץ על "פעילות" להסבר איך לאפשר':'הרשאה עדיין לא אושרה – בחר "פעילות" או "שקטות" כדי לאשר';return '<div class="grid grid-cols-2 gap-2 my-3"><button class="btn b-amber !p-2 text-sm" onclick="usersSheet()">החלף משתמש 👤</button><button class="btn b-stone !p-2 text-sm" onclick="onboard()">✏️ ערוך פרופיל</button></div><div class="font-bold mb-1">🔔 התראות</div><div class="space-y-2">'+B('on','🔔 התראות פעילות (עם צליל/רטט)')+B('silent','🔕 התראות שקטות')+B('off','⛔ כיבוי התראות')+'</div><div class="text-xs text-amber-200/70 mt-1 mb-4">'+st+'</div>'}
