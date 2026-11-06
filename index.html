@@ -286,8 +286,9 @@ async function calcJ(){
 const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת Google',503:'השרת של Google עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה ל-Gemini נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='';
+const VER='2.1',GMS=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'];
 async function callG(body){
-  const ALL=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'],ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
+  const ALL=GMS,ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
   const rt={};
   for(let k=0;k<ms.length;k++){const m=ms[k];
     const url='https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent((G.key||'').trim());
@@ -303,7 +304,7 @@ async function callG(body){
   }
   throw new Error(FR(last)+' — '+errs.join(' | '))}
 function openSettings(){
-  sheet('<h3 class="text-xl font-black mb-2">⚙️ הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button>');
+  sheet('<h3 class="text-xl font-black mb-2">⚙️ הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-amber-200/50 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+GMS.join(' → ')+'</div>');
 }
 function resetAll(){sheet('<div class="text-center"><div class="text-5xl mb-2">⚠️</div><p class="text-lg font-black mb-4">האם אתה בטוח שאתה רוצה למחוק את הכל? כל הגרגרים, השלבים, ההיסטוריה והמעקבים של המשתמש הזה יימחקו לצמיתות!</p><div class="space-y-3"><button class="btn b-red w-full" onclick="resetDo()">כן, מחק הכל</button><button class="btn b-stone w-full" onclick="openSettings()">ביטול</button></div></div>')}
 function resetDo(){clearInterval(nt);try{localStorage.removeItem('antfit_u_'+G.cur);localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}location.reload()}
