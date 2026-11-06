@@ -286,25 +286,39 @@ async function calcJ(){
 const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת Google',503:'השרת של Google עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה ל-Gemini נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='';
-const VER='2.1',GMS=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'];
+const VER='2.2',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models';
+/* רשימת המודלים שזמינים בפועל למפתח (נשמרת ל-24 שעות ב-antfit_g) – כדי שהאפליקציה לא תישבר כשגוגל מחליפה מודלים */
+async function availM(key){
+  const kk=key.slice(-6),c=G.mlist;if(c&&c.k===kk&&Date.now()-c.t<864e5)return c.m;
+  try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),8000),r=await fetch(GAPI+'?pageSize=200&key='+encodeURIComponent(key),{signal:ac.signal}),j=await r.json();clearTimeout(tm);
+    if(!r.ok||!j.models)return [];
+    const m=j.models.filter(x=>(x.supportedGenerationMethods||[]).includes('generateContent')).map(x=>x.name.replace(/^models\//,'')).filter(n=>/^gemini-.*flash/.test(n)&&!/(image|tts|live|audio|embed|exp|computer)/.test(n));
+    G.mlist={k:kk,t:Date.now(),m};saveG();return m}catch(e){return []}}
+const vNum=n=>{const v=(n.match(/gemini-(\d+(?:\.\d+)?)/)||[])[1];return +v||0};
 async function callG(body){
-  const ALL=GMS,ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
-  const rt={};
+  const key=(G.key||'').trim(),av=await availM(key),dead=G.dead||{};
+  let ms=GMS.filter(m=>!av.length||av.includes(m)).concat(av.filter(m=>!GMS.includes(m)).sort((a,b)=>vNum(b)-vNum(a)||(/lite/.test(a)?1:0)-(/lite/.test(b)?1:0)));
+  if(!ms.length)ms=GMS.slice();
+  ms=ms.filter(m=>!dead[m]||Date.now()-dead[m]>864e5);if(!ms.length)ms=GMS.slice();
+  if(GM&&ms.includes(GM))ms=[GM].concat(ms.filter(x=>x!==GM));
+  ms=ms.slice(0,4);
+  const errs=[],rt={};let last=0;
   for(let k=0;k<ms.length;k++){const m=ms[k];
-    const url='https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent((G.key||'').trim());
+    const url=GAPI+'/'+m+':generateContent?key='+encodeURIComponent(key);
     let r,raw;
     const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
     catch(e){clearTimeout(tm);if(e&&e.name==='AbortError'){errs.push(m+' → timeout (15 שניות)');last=408;continue}throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
     let j=null;try{j=JSON.parse(raw)}catch(e){}
     if(r.ok&&j){GM=m;return j}
-    if(r.status===503&&!rt[m]){rt[m]=1;await new Promise(z=>setTimeout(z,1000));k--;continue}
+    if(r.status===503&&!rt[m]){rt[m]=1;await new Promise(z=>setTimeout(z,1500));k--;continue}
     const msg=(j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה';
-    errs.push(m+' → HTTP '+r.status+': '+msg);last=r.status;
-    if(r.status===404)GM='';if(![404,429,500,502,503,504].includes(r.status))break;
+    errs.push(m+' → HTTP '+r.status+': '+msg.slice(0,160));last=r.status;
+    if(r.status===404){if(GM===m)GM='';G.dead=Object.assign(G.dead||{},{[m]:Date.now()});G.mlist=null;saveG()}
+    if(![404,408,429,500,502,503,504].includes(r.status))break;
   }
   throw new Error(FR(last)+' — '+errs.join(' | '))}
 function openSettings(){
-  sheet('<h3 class="text-xl font-black mb-2">⚙️ הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-amber-200/50 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+GMS.join(' → ')+'</div>');
+  sheet('<h3 class="text-xl font-black mb-2">⚙️ הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();G.mlist=null;G.dead={};GM=\'\';save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-amber-200/50 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+(GM||GMS[0])+' (אוטומטי)</div>');
 }
 function resetAll(){sheet('<div class="text-center"><div class="text-5xl mb-2">⚠️</div><p class="text-lg font-black mb-4">האם אתה בטוח שאתה רוצה למחוק את הכל? כל הגרגרים, השלבים, ההיסטוריה והמעקבים של המשתמש הזה יימחקו לצמיתות!</p><div class="space-y-3"><button class="btn b-red w-full" onclick="resetDo()">כן, מחק הכל</button><button class="btn b-stone w-full" onclick="openSettings()">ביטול</button></div></div>')}
 function resetDo(){clearInterval(nt);try{localStorage.removeItem('antfit_u_'+G.cur);localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}location.reload()}
