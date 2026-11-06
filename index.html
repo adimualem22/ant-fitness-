@@ -287,13 +287,13 @@ const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שו
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='';
 async function callG(body){
-  const ALL=['gemini-3.8-flash','gemini-3.1-pro-preview'],ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
+  const ALL=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'],ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
   const rt={};
   for(let k=0;k<ms.length;k++){const m=ms[k];
     const url='https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent((G.key||'').trim());
     let r,raw;
-    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),45000);try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
-    catch(e){clearTimeout(tm);if(e&&e.name==='AbortError'){errs.push(m+' → timeout (45 שניות)');last=408;continue}throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
+    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
+    catch(e){clearTimeout(tm);if(e&&e.name==='AbortError'){errs.push(m+' → timeout (15 שניות)');last=408;continue}throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
     let j=null;try{j=JSON.parse(raw)}catch(e){}
     if(r.ok&&j){GM=m;return j}
     if(r.status===503&&!rt[m]){rt[m]=1;await new Promise(z=>setTimeout(z,1000));k--;continue}
