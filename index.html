@@ -29,8 +29,8 @@ body{background:radial-gradient(circle at 20% 0,#78350f55,transparent 50%),var(-
 .task.done{background:#064e3b88;border-color:#059669}
 .cup{font-size:1.5rem;filter:grayscale(1) opacity(.35);transition:.2s}.cup.on{filter:none;transform:scale(1.1)}
 .tab{display:none}.tab.on{display:block}
-#nav{position:fixed;bottom:0;left:0;right:0;background:#1c1917;border-top:2px solid #78350f;display:grid;grid-template-columns:repeat(5,1fr);padding:.3rem .3rem calc(.3rem + env(safe-area-inset-bottom,0px));z-index:40}
-#nav button{background:none;border:0;color:#a8a29e;font-size:.7rem;font-weight:700;padding:.3rem}
+#nav{position:fixed;bottom:0;left:0;right:0;background:#1c1917;border-top:2px solid #78350f;display:grid;grid-template-columns:repeat(6,1fr);padding:.3rem .2rem calc(.3rem + env(safe-area-inset-bottom,0px));z-index:40}
+#nav button{background:none;border:0;color:#a8a29e;font-size:.66rem;font-weight:700;padding:.3rem .1rem;white-space:nowrap}
 #nav button span{display:block;font-size:1.4rem}
 #nav button.on{color:#f59e0b}
 #sheet{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;justify-content:center;z-index:50}
@@ -38,9 +38,24 @@ body{background:radial-gradient(circle at 20% 0,#78350f55,transparent 50%),var(-
 #sheetBody{background:#292524;border:2px solid #b45309;border-radius:1.5rem 1.5rem 0 0;width:100%;max-width:32rem;max-height:88vh;overflow:auto;padding:1.2rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom,0px))}
 #toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translate(-50%,-150%);transition:.3s;background:#f59e0b;color:#451a03;font-weight:800;padding:.5rem 1rem;border-radius:2rem;z-index:60;box-shadow:0 4px 0 #b45309;max-width:90%;text-align:center}
 #toast.show{transform:translate(-50%,0)}
-input[type=text],input[type=password],input[type=number],input[type=time],textarea,select{width:100%;background:#1c1917;border:2px solid #78350f;border-radius:.8rem;padding:.7rem;color:#fef3c7}
+input[type=text],input[type=password],input[type=number],input[type=time],input[type=tel],textarea,select{width:100%;background:#1c1917;border:2px solid #78350f;border-radius:.8rem;padding:.7rem;color:#fef3c7;font-size:16px}
 .ltr{direction:ltr}
-textarea{resize:vertical;min-height:7rem;font-family:inherit;line-height:1.5}
+textarea{resize:vertical;min-height:9rem;font-family:inherit;line-height:1.6}
+.hidden{display:none!important}
+#login{position:fixed;inset:0;z-index:45;overflow-y:auto;background:radial-gradient(circle at 50% 0,#92400e77,transparent 55%),var(--bg);padding-top:env(safe-area-inset-top,0px)}
+.av{position:relative;display:inline-block;line-height:1}
+.av.x::after{content:'🐜';position:absolute;bottom:-.1em;left:-.25em;font-size:.42em}
+.avb{background:#1c1917;border:2px solid #57534e;border-radius:1rem;padding:.45rem .2rem;text-align:center;cursor:pointer;color:#fef3c7}
+.avb.on{border-color:#f59e0b;background:#78350f;box-shadow:0 0 0 3px #f59e0b55}
+.pd{width:1.1rem;height:1.1rem;border-radius:50%;border:3px solid #f59e0b;display:inline-block}
+.pd.on{background:#f59e0b}
+.kp{font-size:1.5rem;padding:.9rem 0}
+.shake{animation:sh .4s}
+@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem}
+.cd{aspect-ratio:1;border-radius:.6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;border:2px solid transparent;cursor:pointer;position:relative}
+.cd small{font-size:.55rem;line-height:1}
+.cd.sel{border-color:#fef3c7}
 .tmi{width:auto!important;padding:.2rem .4rem;font-size:.85rem}
 .bub{max-width:85%;padding:.55rem .8rem;border-radius:1.1rem;white-space:pre-wrap;line-height:1.45}
 .u{background:#92400e;border-bottom-right-radius:.2rem}.m{background:#44403c;border-bottom-left-radius:.2rem}
@@ -50,6 +65,7 @@ textarea{resize:vertical;min-height:7rem;font-family:inherit;line-height:1.5}
 <body>
 <div id="toast"></div>
 <div id="sheet"><div id="sheetBody"></div></div>
+<div id="login" class="hidden"><div id="loginBody" class="max-w-md mx-auto px-4 pt-8 pb-12"></div></div>
 <input type="file" id="fPlate" accept="image/*" capture="environment" hidden>
 <input type="file" id="fFridge" accept="image/*" capture="environment" hidden>
 <input type="file" id="fMeal" accept="image/*" capture="environment" hidden>
@@ -57,8 +73,9 @@ textarea{resize:vertical;min-height:7rem;font-family:inherit;line-height:1.5}
 <div class="max-w-md mx-auto p-3 space-y-4 pb-28">
   <header class="card">
     <div class="flex items-center justify-between">
-      <div class="text-xl font-black">🐜 Ant Fitness</div><button class="btn b-amber !p-2 !px-3 text-sm" id="userBtn" onclick="usersSheet()">👤</button>
-      <button class="btn b-stone !p-2 !px-3" onclick="openSettings()" aria-label="הגדרות">⚙️</button>
+      <div class="text-xl font-black">🐜 Ant Fitness</div>
+      <div class="flex gap-2"><button class="btn b-amber !p-2 !px-3 text-sm max-w-[10rem] truncate" id="userBtn" onclick="acctSheet()" aria-label="החלף פרופיל">👤</button>
+      <button class="btn b-stone !p-2 !px-3" onclick="openSettings()" aria-label="הגדרות">⚙️</button></div>
     </div>
     <div class="flex items-end justify-between mt-3">
       <div onclick="rankMap()" style="cursor:pointer"><div id="rankIcon" class="text-4xl leading-none"></div><div id="rankName" class="font-black text-lg text-amber-400"></div></div>
@@ -98,18 +115,18 @@ textarea{resize:vertical;min-height:7rem;font-family:inherit;line-height:1.5}
   </section>
 
   <section class="tab space-y-4" data-t="work">
-    <div id="fbTop"></div>
     <div class="card"><h2 class="font-black text-lg mb-1">🏋️ תוכנית פרוגרסיבית (משקל גוף בלבד)</h2>
       <p class="text-sm text-amber-200/80 mb-3">השלם תרגיל 3 פעמים והרמה עולה אוטומטית. פעם אחת ביום לכל תרגיל.</p>
       <div id="ex" class="space-y-3"></div></div>
     <div id="stCard"></div>
+    <div id="fbCard"></div>
     <div class="card"><h2 class="font-black text-lg mb-2">➕ בונוסים</h2><div id="tasks" class="space-y-2"></div></div>
-    <div id="fbBot"></div>
   </section>
 
   <section class="tab space-y-4" data-t="food">
     <div class="card !border-red-600 text-center"><div class="text-3xl">⏰</div><div class="font-black text-lg text-red-400">מסיימים לאכול 3 שעות לפני השינה!</div></div>
     <h2 class="font-black text-xl px-1">📓 יומן האכילה היומי שלי</h2>
+    <button class="btn b-amber w-full" onclick="coffeeForm()">☕ הוסף קפה / נס קפה</button>
     <div id="foodLog"></div>
     <details class="card"><summary class="font-black text-lg cursor-pointer">המלצות מה כדאי לאכול 💡</summary><p class="text-xs text-amber-200/70 my-2">המלצות כלליות בלבד, לא קביעה – התאם לטעם ולצרכים שלך.</p><div id="meals" class="space-y-2"></div></details>
   </section>
@@ -138,6 +155,11 @@ textarea{resize:vertical;min-height:7rem;font-family:inherit;line-height:1.5}
     </div>
     <div class="card" id="wStats"></div>
   </section>
+
+  <section class="tab space-y-4" data-t="hist">
+    <h2 class="font-black text-xl px-1">📜 היסטוריה ומעקב</h2>
+    <div id="histView" class="space-y-4"></div>
+  </section>
 </div>
 
 <nav id="nav"></nav>
@@ -145,7 +167,12 @@ textarea{resize:vertical;min-height:7rem;font-family:inherit;line-height:1.5}
 <script>
 const $=id=>document.getElementById(id);
 const K='antfit_v1';
-const R=[[0,'עצלן בתרדמת','😴'],[250,'נמלה מתעוררת','🥱'],[700,'נמלת פועלת','🐜'],[1500,'נמלת חיל','💪'],[3000,'מפקדת מחלקה','🎖️'],[5500,'שומרת המלכה','🛡️'],[9000,'שליט ממלכת הנמלים','👑']];
+const R=[[0,'עצלן בתרדמת','😴'],[1500,'נמלה מתעוררת','🥱'],[3000,'נמלת פועלת','🐜'],[6000,'נמלת חיל','💪'],[12000,'מפקדת מחלקה','🎖️'],[24000,'שומרת המלכה','🛡️'],[48000,'שליט ממלכת הנמלים','👑']];
+const rankOf=g=>{let i=0;R.forEach((r,k)=>{if(g>=r[0])i=k});return i};
+const fmt=n=>Math.round(+n||0).toLocaleString('en-US');
+const AV=[['🐜','נמלת פועלת'],['👑','נמלת מלכה'],['💪','נמלת שרירנית'],['🥷','נמלת נינג׳ה'],['⚡','נמלת טורבו'],['⚽','נמלת כדורגלנית'],['🥊','נמלת לוחמת'],['🧘‍♀️','נמלת יוגה'],['🚀','נמלת אסטרונאוטית'],['🧠','נמלת גאון'],['🧑‍🍳','נמלת שפית'],['🛡️','נמלת שריף'],['🚴','נמלת רוכבת'],['🧗','נמלת מטפסת'],['🌊','נמלת גולשת'],['🕵️','נמלת בילוש'],['🧙','נמלת קוסמת'],['🥇','נמלת אלופה'],['🤖','נמלת סייבר'],['🔥','נמלת להבה'],['🏃','נמלת ריצה'],['🦸','נמלת גיבורה'],['🎯','נמלת צלפית'],['🌱','נמלת טבע']];
+const avOf=i=>AV[+i]||AV[0];
+const avH=(i,cls)=>'<span class="av'+(+i?' x':'')+' '+(cls||'')+'">'+avOf(i)[0]+'</span>';
 const T=[['wk','יציאה להליכה – 20 דקות','🚶',25],['st','מתיחות – 5 דקות','🧘',10]];
 const EX=[
 ['sq','סקוואטים','🦵',['12 חזרות','15 חזרות','20 חזרות','סקוואט קפיצה × 12'],'עמוד ברוחב כתפיים, שב אחורה כאילו על כיסא, הברכיים לא עוקפות את האצבעות, העקבים על הרצפה, חזור למעלה.','ירכיים וישבן – נגד ישבן רפוי'],
@@ -158,7 +185,8 @@ const MEALS=[
 ['☀️','צהריים','חזה עוף / דג / קטניות, המון ירקות, ומנה קטנה של פחמימה מלאה (אורז מלא, בטטה).'],
 ['🌙','ערב','עשיר בחלבון וירקות: סלט טונה, שקשוקה, ירקות מוקפצים עם עוף, גבינה לבנה. וסוגרים מטבח 3 שעות לפני השינה.'],
 ['🍎','נשנושי ביניים (רעב פתאומי)','פרי, גזר או מלפפון, ביצה קשה, יוגורט, חופן קטן של אגוזים. קודם כוס מים!']];
-const SYS=`אתה יועץ תזונה וכושר ביתי ברמה הגבוהה ביותר עבור משתמש שרוצה להפוך מעצלן לחרוץ, לרדת במשקל, למנוע גוף רפוי ולבנות מסלול חיים בריא.
+const SYS=`אתה המאמן האישי הנלהב של ממלכת הנמלים 🐜 – מלא אנרגיה, מעודד, הומוריסטי במידה ותמיד פרקטי. אתה עונה תמיד בעברית.
+אתה גם יועץ תזונה וכושר ביתי ברמה הגבוהה ביותר עבור משתמש שרוצה להפוך מעצלן לחרוץ, לרדת במשקל, למנוע גוף רפוי ולבנות מסלול חיים בריא.
 יש לך ידע אנציקלופדי מקיף על כל מאכל, חומר גלם, מותג, ממתק, רוטב, שתייה או מנת מסעדה שקיימת בעולם.
 בכל פעם שהמשתמש שואל אם מותר לו לאכול/לשתות משהו או איך לאכול מאכל מסוים (למשל המבורגר, צ'יפס, פיצה, טוסט, ממתק, שווארמה, שתייה מתוקה וכו'):
 1. נתח בכנות ובמדויק: כמה קלוריות, סוכר ושומן יש במנה הרגילה, והדגש את הסכנות הסמויות (כמו טיגון עמוק, שומן רווי או רטבים עמוסי קלוריות כמו מיונז וברביקיו).
@@ -168,14 +196,16 @@ const SYS=`אתה יועץ תזונה וכושר ביתי ברמה הגבוהה 
 const JK=[['עצור! אל תעשה את זה. שתה עכשיו כוס מים גדולה','💧 שתיתי כוס מים','drink()'],['תחשוב על המטרה שלך ועל הדרך שכבר עברת. קח פרי או ירק במקום!','🍎 לקחתי פרי / ירק','add(15,"בחרתי פרי או ירק במקום ג׳אנק 🍎")'],['זה רק דחף של 5 דקות. קום לסיבוב של 2 דקות בבית!','🚶 יצאתי לסיבוב','add(20,"סיבוב של 2 דקות נגד דחף 🚶")']];
 const NOTE=['💧 זמן לכוס מים, נמלה!','🐜 קום לתרגיל קצר – גרגרים מחכים לך!','🌾 עוד בחירה בריאה אחת ואתה מתקדם לדרגה הבאה!','☕ אחרי 16:00 – עוצרים קפה!'];
 let G={key:'',users:[],cur:'',nm:'on'},S;
-const DEF=()=>({grains:0,tasks:{},water:{},wb:{},hist:[],prog:{},coffee:{},w:{start:0,cur:0,goal:0,log:[]},chat:[],meals:{},ns:{},lastW:0,undo:[],pf:null,fd:{},st:{},fb:{},key:''});
-function ld(){S=DEF();try{Object.assign(S,JSON.parse(localStorage.getItem('antfit_u_'+G.cur))||{})}catch(e){}if(!S.w||!S.w.log)S.w={start:0,cur:0,goal:0,log:[]};if(!S.undo)S.undo=[];S.key=G.key}
-
-
-const save=()=>{G.key=S.key||'';try{localStorage.setItem('antfit_u_'+G.cur,JSON.stringify(Object.assign({},S,{key:''})));localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}};
+/* נתוני משתמש: antfit_u_<id> (מבודד לכל פרופיל) · הגדרות גלובליות ומפתח API: antfit_g (משותף לכל הפרופילים במכשיר) */
+const DEF=()=>({grains:0,tasks:{},water:{},wb:{},hist:[],prog:{},coffee:{},w:{start:0,cur:0,goal:0,log:[]},chat:[],meals:{},ns:{},lastW:0,undo:[],pf:null,fd:{},st:{},fb:{}});
+function ld(){S=DEF();try{Object.assign(S,JSON.parse(localStorage.getItem('antfit_u_'+G.cur))||{})}catch(e){}if(!S.w||!S.w.log)S.w={start:0,cur:0,goal:0,log:[]};if(!S.undo)S.undo=[];if(S.key){if(!G.key)G.key=S.key;delete S.key}}
+const saveG=()=>{try{localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}};
+const save=()=>{if(G.cur&&S){try{localStorage.setItem('antfit_u_'+G.cur,JSON.stringify(S))}catch(e){}}saveG()};
 const day=()=>new Date().toLocaleDateString('sv');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const tgt=()=>S.w.cur?Math.min(12,Math.max(8,Math.round(S.w.cur*0.033/0.25))):8;
+const tgt=()=>(S.pf&&+S.pf.wg)?+S.pf.wg:S.w.cur?Math.min(12,Math.max(8,Math.round(S.w.cur*0.033/0.25))):8;
+const SG=()=>(S.pf&&+S.pf.sg)||10000;
+const curU=()=>G.users.find(u=>u.id===G.cur)||{};
 
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
 function add(n,txt){S.grains=Math.max(0,S.grains+n);if(txt){S.hist.unshift({t:Date.now(),x:txt,g:n});S.hist=S.hist.slice(0,30)}save();render();if(n>0)toast('+'+n+' 🌾 '+(txt||''))}
@@ -183,15 +213,17 @@ function sheet(h){$('sheetBody').innerHTML=h;$('sheet').classList.add('open')}
 function closeSheet(){$('sheet').classList.remove('open')}
 $('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
 
-const TABS=[['home','🏠','בית'],['work','🏋️','אימון'],['food','🍽️','תזונה'],['chat','💬','יועץ'],['wt','⚖️','משקל']];
+const TABS=[['home','🏠','בית'],['work','🏋️','אימון'],['food','🍽️','תזונה'],['chat','💬','יועץ'],['wt','⚖️','משקל'],['hist','📜','היסטוריה']];
 $('nav').innerHTML=TABS.map(t=>'<button data-n="'+t[0]+'" onclick="go(\''+t[0]+'\')"><span>'+t[1]+'</span>'+t[2]+'</button>').join('');
-function go(t){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.n===t));scrollTo(0,0);if(t==='chat')drawChat()}
+let TAB='home';
+function go(t){TAB=t;document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.n===t));scrollTo(0,0);if(t==='chat')drawChat();if(t==='hist')drawHist()}
 
 function render(){
-  let i=0;R.forEach((r,k)=>{if(S.grains>=r[0])i=k});
+  if(!G.cur||!S)return;
+  const i=rankOf(S.grains);
   const cur=R[i],nx=R[i+1],d=day(),w=S.water[d]||0,td=S.tasks[d]||{},cf=S.coffee[d]||0,tg=tgt();
-  $('rankIcon').textContent=cur[2];$('rankName').textContent=cur[1];$('grains').textContent=S.grains;
-  if(nx){$('bar').style.width=Math.round((S.grains-cur[0])/(nx[0]-cur[0])*100)+'%';$('nextTxt').textContent='חסרים '+(nx[0]-S.grains)+' 🌾 לדרגת "'+nx[1]+'"'}
+  $('rankIcon').textContent=cur[2];$('rankName').textContent=cur[1];$('grains').textContent=fmt(S.grains);
+  if(nx){$('bar').style.width=Math.round((S.grains-cur[0])/(nx[0]-cur[0])*100)+'%';$('nextTxt').textContent='חסרים '+fmt(nx[0]-S.grains)+' 🌾 לדרגת "'+nx[1]+'"'}
   else{$('bar').style.width='100%';$('nextTxt').textContent='הגעת לפסגה! 👑'}
   $('waterN').textContent=w+' / '+tg;
   $('cups').innerHTML=Array.from({length:Math.max(tg,w)},(_,k)=>'<span class="cup'+(k<w?' on':'')+'">🥤</span>').join('');
@@ -204,7 +236,8 @@ function render(){
   $('meals').innerHTML=MEALS.map(m=>'<div class="rounded-xl bg-stone-900/60 border border-amber-900 p-3"><div class="font-black">'+m[0]+' '+m[1]+'</div><p class="text-sm mt-1">'+m[2]+'</p></div>').join('');drawFood();
   $('hist').innerHTML=S.hist.length?S.hist.slice(0,8).map(h=>'<div class="flex justify-between border-b border-amber-900/50 py-1"><span>'+esc(h.x)+'</span><span class="text-amber-400 font-bold">'+(h.g>0?'+':'')+h.g+'</span></div>').join(''):'<div class="text-amber-200/60">עוד אין הרפתקאות. התחל במשימה ראשונה!</div>';
   $('undoBtn').textContent='↩️ בטל פעולה אחרונה'+(S.undo.length?' ('+S.undo.length+')':'');$('undoBtn').disabled=!S.undo.length;
-  $('userBtn').textContent='👤 '+((G.users.find(u=>u.id===G.cur)||{}).name||'');
+  $('userBtn').textContent=avOf(curU().av)[0]+' '+(curU().name||'');
+  if(TAB==='hist')drawHist();
   const gr='Notification' in window&&Notification.permission==='granted';$('nStat').textContent='🔔 התראות: '+(G.nm==='off'?'כבויות':!gr?(('Notification' in window&&Notification.permission==='denied')?'חסומות בדפדפן':'עדיין לא הופעלו'):G.nm==='silent'?'שקטות':'פעילות')+' · שינוי בהגדרות ⚙️';
   drawW();
 }
@@ -218,7 +251,7 @@ function drink(){snap('כוס מים');const d=day();S.water[d]=(S.water[d]||0)+
   if(S.water[d]>=tgt()&&!S.wb[d]){S.wb[d]=1;add(20,'יעד מים יומי הושלם!')}}
 const nowHM=()=>{const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')};
 const CT=[['נס קפה רגיל',3],['נס קפה מגורען',3],['נס קפה נטול קפאין',3],['אספרסו / שחור',2]];
-const CM=[['חלב על בסיס חלבון BLG שאינו מן החי 3% שומן',36,1.8],['חלב פרה רגיל 3%',36,1.8],['חלב פרה רגיל 1%',25,0.6],['חלב דל לקטוז',30,1],['משקה שיבולת שועל',27,0.9],['משקה סויה',24,1.2],['משקה שקדים',12,0.7],['ללא חלב (שחור)',0,0]];
+const CM=[['חלב על בסיס חלבון BLG 3% שאינו מן החי',36,1.8],['חלב פרה 3%',36,1.8],['חלב פרה 1%',25,0.6],['חלב דל לקטוז',30,1],['משקה שיבולת שועל',27,0.9],['משקה סויה',24,1.2],['משקה שקדים',12,0.7],['ללא חלב (שחור)',0,0]];
 const CS=[['סטיביה',0],['ללא סוכר',0],['סוכרזית',0],['סוכר רגיל',16]];
 function coffeeForm(){
   sheet('<h3 class="text-xl font-black mb-3">☕ הוסף קפה / נס קפה</h3>'+(new Date().getHours()>=16?'<div class="text-red-400 text-sm font-bold mb-2">🛑 אחרי 16:00 – עדיף לעצור קפה (פוגע בשינה).</div>':'')+'<label class="text-sm">סוג הקפה</label><select id="cfT" class="mb-2">'+CT.map((c,i)=>'<option value="'+i+'">'+c[0]+'</option>').join('')+'</select><label class="text-sm">סוג החלב</label><select id="cfM" class="mb-1" onchange="cfCust()">'+CM.map((c,i)=>'<option value="'+i+'">'+(i===0?'⭐ ':'')+c[0]+'</option>').join('')+'<option value="x">✏️ אחר – הקלדה ידנית</option></select><div id="cfX" class="hidden mb-2"><input type="text" id="cfXn" placeholder="שם החלב / המשקה" class="mb-1"><input type="number" id="cfXk" inputmode="numeric" placeholder="קלוריות משוערות (ברירת מחדל 30)"></div><label class="text-sm">ממתיק וכמות כפיות</label><div class="grid grid-cols-2 gap-2 mb-2"><select id="cfS">'+CS.map((c,i)=>'<option value="'+i+'">'+c[0]+'</option>').join('')+'</select><input type="number" id="cfQ" inputmode="numeric" min="0" max="10" value="1"></div><label class="text-sm">שעה</label><input type="time" id="cfH" value="'+nowHM()+'" class="mb-3"><div class="text-xs text-amber-200/60 mb-3">הקלוריות הן הערכה (חלב ≈ 60 מ״ל).</div><button class="btn b-amber w-full" onclick="coffeeAdd()">הוסף ליומן ☕</button>')}
@@ -239,7 +272,7 @@ function junk(n){
 function broke(){sheet('<div class="text-center"><div class="text-5xl mb-2">😔</div><p class="text-lg font-black mb-3">אני עצוב ומאוכזב, אבל אנחנו לא מוותרים! בוא נתקן את זה עכשיו</p></div><label class="text-sm">מה אכלת?</label><input type="text" id="jf" placeholder="למשל: 3 פרוסות פיצה"><button class="btn b-amber w-full mt-3" onclick="calcJ()">חשב תוכנית פיצוי</button>')}
 const TBL=[['פיצה',500],['שוקולד',250],['גלידה',250],['עוגה',350],['עוגיות',250],['צ׳יפס',400],['במבה',300],['קולה',140],['המבורגר',600],['סופגניה',350],['ממתק',120]];
 async function est(f){
-  if(S.key){try{const r=await callG({contents:[{parts:[{text:'הערך קלוריות כוללות בערך למה שנאכל: "'+f+'". החזר JSON בלבד: {"kcal":מספר}'}]}],generationConfig:{responseMimeType:'application/json'}});const k=JSON.parse(r.candidates[0].content.parts[0].text).kcal;if(k>0)return Math.round(k)}catch(e){}}
+  if(G.key){try{const r=await callG({contents:[{parts:[{text:'הערך קלוריות כוללות בערך למה שנאכל: "'+f+'". החזר JSON בלבד: {"kcal":מספר}'}]}],generationConfig:{responseMimeType:'application/json'}});const k=JSON.parse(r.candidates[0].content.parts[0].text).kcal;if(k>0)return Math.round(k)}catch(e){}}
   const h=TBL.find(t=>f.includes(t[0].replace('׳',"'"))||f.includes(t[0]));return h?h[1]:300}
 async function calcJ(){
   const f=$('jf').value.trim();if(!f)return;
@@ -254,10 +287,10 @@ const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שו
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='';
 async function callG(body){
-  const ALL=['gemini-2.5-flash','gemini-2.5-pro'],ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
+  const ALL=['gemini-3.8-flash','gemini-3.1-pro-preview'],ms=GM?[GM].concat(ALL.filter(x=>x!==GM)):ALL,errs=[];let last=0;
   const rt={};
   for(let k=0;k<ms.length;k++){const m=ms[k];
-    const url='https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent((S.key||'').trim());
+    const url='https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent((G.key||'').trim());
     let r,raw;
     const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),45000);try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
     catch(e){clearTimeout(tm);if(e&&e.name==='AbortError'){errs.push(m+' → timeout (45 שניות)');last=408;continue}throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
@@ -270,11 +303,11 @@ async function callG(body){
   }
   throw new Error(FR(last)+' — '+errs.join(' | '))}
 function openSettings(){
-  sheet('<h3 class="text-xl font-black mb-2">⚙️ הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(S.key)+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="S.key=$(\'keyIn\').value.trim();save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button>');
+  sheet('<h3 class="text-xl font-black mb-2">⚙️ הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button>');
 }
 function resetAll(){sheet('<div class="text-center"><div class="text-5xl mb-2">⚠️</div><p class="text-lg font-black mb-4">האם אתה בטוח שאתה רוצה למחוק את הכל? כל הגרגרים, השלבים, ההיסטוריה והמעקבים של המשתמש הזה יימחקו לצמיתות!</p><div class="space-y-3"><button class="btn b-red w-full" onclick="resetDo()">כן, מחק הכל</button><button class="btn b-stone w-full" onclick="openSettings()">ביטול</button></div></div>')}
 function resetDo(){clearInterval(nt);try{localStorage.removeItem('antfit_u_'+G.cur);localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}location.reload()}
-function needKey(){if(S.key)return true;openSettings();toast('קודם הדבק מפתח Gemini');return false}
+function needKey(){if(G.key)return true;openSettings();toast('קודם הדבק מפתח Gemini');return false}
 
 /* צ׳אט */
 function drawChat(){
@@ -343,7 +376,7 @@ const nn=v=>Math.round(+v||0);
 function entHTML(e,id,i,d){const A=e.a,at=e.at||new Date(e.ts).toTimeString().slice(0,5),c={good:'border-emerald-600',ok:'border-amber-600',heavy:'border-orange-500'}[A.verdict]||'border-amber-900',M=(ic,v,l)=>'<div class="rounded-lg bg-amber-950 p-1">'+ic+'<br><b>'+nn(v)+'</b><br>'+l+'</div>';return '<div class="rounded-2xl border-2 '+c+' bg-stone-900/60 p-3 mb-3"><div class="flex items-start gap-2"><input type="time" class="tmi" value="'+at+'" onchange="editAt(\''+id+'\','+i+',this.value)"><div class="font-bold flex-1">- '+(e.img?'📷 ':'')+esc(e.t||'(לפי התמונה)')+'</div></div><div class="text-xs text-amber-200/60 mt-1">📅 '+d.split('-').reverse().join('.')+' · ניתן לערוך את השעה</div><div class="grid grid-cols-4 gap-1 text-center text-xs my-2">'+M('🔥',A.kcal,'קל׳')+M('🍬',A.sugar,'סוכר ג׳')+M('🧈',A.fat,'שומן ג׳')+M('💪',A.protein,'חלבון ג׳')+'</div>'+(A.feedback?'<p class="text-sm">'+esc(A.feedback)+'</p>':'')+(A.swap?'<p class="text-sm mt-1">💡 <b>עדיף:</b> '+esc(A.swap)+'</p>':'')+(A.offset?'<p class="text-sm mt-1">🏋️ <b>קיזוז ביתי:</b> '+esc(A.offset)+'</p>':'')+(A.verdict==='good'?'<div class="text-emerald-400 font-black text-sm mt-1">🌾 +30 גרגרים – ארוחה מעולה!</div>':'')+'</div>'}
 function editAt(id,i,v){const d=day(),l=(S.fd[d]||{})[id],e=l&&l[i];if(!e||!/^\d{2}:\d{2}$/.test(v))return;snap('שעת ארוחה');e.at=v;save();render()}
 function drawFood(){const d=day(),f=S.fd[d]||{},tot=Object.values(f).flat().reduce((s,e)=>s+((e.a&&+e.a.kcal)||0),0),q=plan();
-  $('foodLog').innerHTML='<div class="card !p-3 text-center mb-3"><div class="text-sm">סה״כ קלוריות מנותחות היום</div><div class="text-3xl font-black text-amber-400">'+nn(tot)+(q.cal?' <span class="text-base text-amber-200/70">/ ~'+q.cal+'</span>':'')+'</div>'+(q.cal?'<div class="h-3 bg-stone-900 rounded-full overflow-hidden mt-2 border border-amber-900"><div class="h-full '+(tot>q.cal?'bg-red-500':'bg-emerald-600')+'" style="width:'+Math.min(100,Math.round(tot/q.cal*100))+'%"></div></div>':'')+'</div>'+Object.keys(MN).map(id=>'<div class="card mb-3"><div class="font-black text-lg mb-2">'+MN[id][0]+' '+MN[id][1]+'</div>'+(f[id]||[]).map((e,i)=>entHTML(e,id,i,d)).join('')+(FB[id]?'<div class="text-center py-3"><span class="text-3xl animate-bounce inline-block">🐜</span><div class="text-sm">מנתח את הארוחה...</div></div>':'')+(ER[id]?'<div class="text-red-400 text-sm mb-2">'+esc(ER[id])+'</div>':'')+'<textarea id="fi_'+id+'" rows="4" placeholder="מה אכלת או שתית? אפשר לפרט כמה שרוצים (מרכיבים, כמויות, רטבים...)" oninput="DR[\''+id+'\']=this.value" class="mb-2">'+esc(DR[id]||'')+'</textarea><div class="flex items-center gap-2 mb-2"><label class="text-sm">🕒 שעת אכילה:</label><input type="time" id="ft_'+id+'" class="tmi" value="'+(DT[id]||nowHM())+'" onchange="DT[\''+id+'\']=this.value"></div><div class="grid grid-cols-3 gap-2"><button class="btn b-green col-span-2 !p-2 text-sm" onclick="anaMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>שלח לניתוח 🧠</button><button class="btn b-amber !p-2 text-sm" onclick="pickMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>📷 צלם</button></div></div>').join('')}
+  $('foodLog').innerHTML='<div class="card !p-3 text-center mb-3"><div class="text-sm">סה״כ קלוריות מנותחות היום</div><div class="text-3xl font-black text-amber-400">'+nn(tot)+(q.cal?' <span class="text-base text-amber-200/70">/ ~'+q.cal+'</span>':'')+'</div>'+(q.cal?'<div class="h-3 bg-stone-900 rounded-full overflow-hidden mt-2 border border-amber-900"><div class="h-full '+(tot>q.cal?'bg-red-500':'bg-emerald-600')+'" style="width:'+Math.min(100,Math.round(tot/q.cal*100))+'%"></div></div>':'')+'</div>'+Object.keys(MN).map(id=>'<div class="card mb-3"><div class="font-black text-lg mb-2">'+MN[id][0]+' '+MN[id][1]+'</div>'+(f[id]||[]).map((e,i)=>entHTML(e,id,i,d)).join('')+(FB[id]?'<div class="text-center py-3"><span class="text-3xl animate-bounce inline-block">🐜</span><div class="text-sm">מנתח את הארוחה...</div></div>':'')+(ER[id]?'<div class="text-red-400 text-sm mb-2">'+esc(ER[id])+'</div>':'')+'<textarea id="fi_'+id+'" rows="6" placeholder="מה אכלת או שתית? אפשר לפרט כמה שרוצים (מרכיבים, כמויות, רטבים...)" oninput="DR[\''+id+'\']=this.value" class="mb-2">'+esc(DR[id]||'')+'</textarea><div class="flex items-center gap-2 mb-2"><label class="text-sm">🕒 שעת אכילה:</label><input type="time" id="ft_'+id+'" class="tmi" value="'+(DT[id]||nowHM())+'" onchange="DT[\''+id+'\']=this.value"></div><div class="grid grid-cols-3 gap-2"><button class="btn b-green col-span-2 !p-2 text-sm" onclick="anaMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>שלח לניתוח 🧠</button><button class="btn b-amber !p-2 text-sm" onclick="pickMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>📷 צלם</button></div></div>').join('')}
 function pickMeal(id){if(FB[id]||!needKey())return;MID=id;$('fMeal').click()}
 $('fMeal').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)anaMeal(MID,f)};
 async function anaMeal(id,file){
@@ -364,19 +397,20 @@ async function anaMeal(id,file){
     FB[id]=0;add(v==='good'?30:5,v==='good'?'ארוחה בריאה: '+MN[id][1]+' 🥗':'עדכנתי '+MN[id][1]);
   }catch(e){FB[id]=0;ER[id]=(e&&e.message)||'שגיאת רשת – נסה שוב';drawFood()}
 }
-function rankMap(){let c=0;R.forEach((r,k)=>{if(S.grains>=r[0])c=k});const nx=R[c+1];
-  sheet('<h3 class="text-xl font-black mb-1">🗺️ מפת דרגות ומסלול התקדמות</h3><p class="text-sm text-amber-200/80 mb-4">יש לך <b class="text-amber-400">'+S.grains.toLocaleString('en-US')+' 🌾</b>'+(nx?' · חסרים '+(nx[0]-S.grains).toLocaleString('en-US')+' 🌾 לדרגה הבאה':' · הגעת לפסגה! 👑')+'</p>'+R.map((r,i)=>{const un=S.grains>=r[0],is=i===c,n2=R[i+1],pct=is&&n2?Math.round((S.grains-r[0])/(n2[0]-r[0])*100):0;return '<div class="flex gap-3"><div class="flex flex-col items-center"><div class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-2xl border-4 '+(is?'border-amber-400 bg-amber-900':un?'border-emerald-600 bg-emerald-950':'border-stone-600 bg-stone-800 opacity-60')+'">'+(is?'🐜':un?r[2]:'🔒')+'</div>'+(n2?'<div class="w-1 flex-1 min-h-[1.5rem] '+(S.grains>=n2[0]?'bg-emerald-600':is?'bg-amber-500':'bg-stone-600')+'"></div>':'')+'</div><div class="flex-1 pb-4"><div class="font-black '+(is?'text-amber-400 text-lg':un?'text-emerald-400':'text-stone-400')+'">'+r[2]+' '+r[1]+(is?' <span class="text-xs">(אתה כאן)</span>':'')+'</div><div class="text-sm text-amber-200/70">'+r[0].toLocaleString('en-US')+' 🌾 · '+(is?'דרגה נוכחית':un?'נפתחה ✔':'נעולה – חסרים '+(r[0]-S.grains).toLocaleString('en-US'))+'</div>'+(is&&n2?'<div class="h-3 bg-stone-900 rounded-full overflow-hidden border border-amber-900 mt-1"><div class="h-full bg-gradient-to-l from-amber-400 to-amber-600" style="width:'+pct+'%"></div></div>':'')+'</div></div>'}).join('')+'<button class="btn b-amber w-full mt-2" onclick="closeSheet()">סגור</button>')}
+function rankMap(){const c=rankOf(S.grains),cur=R[c],nx=R[c+1],pct=nx?Math.round((S.grains-cur[0])/(nx[0]-cur[0])*100):100;
+  const top='<div class="card !p-3 mb-4 text-center"><div class="text-5xl">'+cur[2]+'</div><div class="font-black text-xl text-amber-400">'+cur[1]+'</div><div class="text-sm mb-2">דרגה '+(c+1)+' מתוך '+R.length+' · '+fmt(S.grains)+' 🌾</div><div class="h-4 bg-stone-900 rounded-full overflow-hidden border-2 border-amber-900"><div class="h-full bg-gradient-to-l from-amber-400 to-amber-600" style="width:'+pct+'%"></div></div><div class="text-sm mt-1">'+(nx?'חסרים <b class="text-amber-400">'+fmt(nx[0]-S.grains)+' 🌾</b> לדרגת "'+nx[1]+'" ('+pct+'%)':'הגעת לפסגה! 👑')+'</div></div>';
+  const badges='<div class="font-black mb-2">🏅 תגים שנפתחו ('+(c+1)+'/'+R.length+')</div><div class="flex flex-wrap gap-2 mb-4">'+R.map((r,i)=>'<span class="chip'+(i<=c?'':' opacity-40')+'">'+(i<=c?r[2]:'🔒')+' '+r[1]+'</span>').join('')+'</div>';
+  sheet('<h3 class="text-xl font-black mb-3">🗺️ מפת דרגות ומסלול התקדמות</h3>'+top+badges+'<div class="font-black mb-3">🧭 המסלול</div>'+R.map((r,i)=>{const un=S.grains>=r[0],is=i===c,n2=R[i+1],p2=is&&n2?pct:0;return '<div class="flex gap-3"><div class="flex flex-col items-center"><div class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-2xl border-4 '+(is?'border-amber-400 bg-amber-900':un?'border-emerald-600 bg-emerald-950':'border-stone-600 bg-stone-800 opacity-60')+'">'+(is?avOf(curU().av)[0]:un?r[2]:'🔒')+'</div>'+(n2?'<div class="w-1 flex-1 min-h-[1.5rem] '+(S.grains>=n2[0]?'bg-emerald-600':is?'bg-amber-500':'bg-stone-600')+'"></div>':'')+'</div><div class="flex-1 pb-4"><div class="font-black '+(is?'text-amber-400 text-lg':un?'text-emerald-400':'text-stone-400')+'">'+r[2]+' '+r[1]+(is?' <span class="text-xs">(את/ה כאן)</span>':'')+'</div><div class="text-sm text-amber-200/70">'+fmt(r[0])+' 🌾 · '+(is?'דרגה נוכחית':un?'נפתחה ✔':'נעולה – חסרים '+fmt(r[0]-S.grains))+'</div>'+(is&&n2?'<div class="h-3 bg-stone-900 rounded-full overflow-hidden border border-amber-900 mt-1"><div class="h-full bg-gradient-to-l from-amber-400 to-amber-600" style="width:'+p2+'%"></div></div>':'')+'</div></div>'}).join('')+'<button class="btn b-amber w-full mt-2" onclick="closeSheet()">סגור</button>')}
 let KM=false;
 function actKcal(n){return Math.round(n*(S.w.cur||75)*0.00057)}
-function actSync(){const n=Math.max(0,Math.round(+$('stIn').value||0));if(!KM)$('stK').value=n>0?actKcal(n):'';$('stDist').textContent=n>0?'📏 מרחק משוער: ~'+(n*0.00075).toFixed(1)+' ק״מ':''}
+function actSync(){const n=Math.max(0,Math.round(+$('stIn').value||0));if(!KM)$('stK').value=n>0?actKcal(n):'';$('stDist').textContent=n>0?'📏 מרחק משוער: ~'+(n*0.00075).toFixed(2)+' ק״מ':''}
 function actKin(){KM=$('stK').value!=='';if(!KM)actSync()}
 function drawAct(){
-  const d=day(),st=S.st[d]||{n:0,k:0,g:0,m:0},fb=S.fb[d]||{},wed=new Date().getDay()===3,kf=fb.k||0,done=fb.done,inc=!!st.inc,tot=(st.k||0)+(inc?0:kf);
+  const d=day(),st=S.st[d]||{n:0,k:0,g:0,m:0},fb=S.fb[d]||{},kf=fb.k||0,done=fb.done,inc=!!st.inc,tot=(st.k||0)+(inc?0:kf),sg=SG();
   KM=!!st.m;
-  $('stCard').innerHTML='<div class="card"><h2 class="font-black text-lg mb-2">👟 מעקב צעדים וקלוריות יומי (משעון / טלפון)</h2><label class="text-sm">צעדים שבוצעו היום</label><input type="number" id="stIn" inputmode="numeric" placeholder="למשל 8000" value="'+(st.n||'')+'" oninput="actSync()" class="mb-2"><label class="text-sm">קלוריות שנשרפו היום (ישירות מהשעון 🔥)</label><input type="number" id="stK" inputmode="numeric" placeholder="נחשב אוטומטית מהצעדים" value="'+(st.k||'')+'" oninput="actKin()"><div id="stDist" class="text-sm text-amber-200/80 mt-1">'+(st.n>0?'📏 מרחק משוער: ~'+(st.n*0.00075).toFixed(1)+' ק״מ':'')+'</div><label class="flex items-start gap-2 text-sm mt-2"><input type="checkbox" id="stInc" '+(inc?'checked':'')+' onchange="stInc(this.checked)" style="width:1.2rem;height:1.2rem;margin-top:.15rem"><span>הצעדים/הקלוריות כוללים כבר את משחק הכדורגל של הערב</span></label><div class="h-4 bg-stone-900 rounded-full overflow-hidden border-2 border-amber-900 mt-2"><div class="h-full bg-emerald-600" style="width:'+Math.min(100,Math.round(st.n/100))+'%"></div></div><div class="text-sm mt-1">'+st.n.toLocaleString('en-US')+' / 10,000 צעדים</div><button class="btn b-green w-full mt-3" onclick="saveSteps()">עדכן ושמור פעילות יומית</button><div class="text-xs text-amber-200/70 mt-2">+10 🌾 על כל 2,000 צעדים · בונוס +40 🌾 ב-10,000+ · בהזנת קלוריות בלבד: +10 🌾 על כל 100 קל׳ (עד 60 ביום) · הרווחת היום: <b class="text-amber-400">'+st.g+' 🌾</b></div><div class="mt-3 rounded-xl bg-stone-900/60 border border-amber-900 p-2 text-sm"><b>סיכום קלוריות שרופות היום:</b> 🔥 ~'+tot+' קל׳ (פעילות '+(st.k||0)+(kf?(inc?' · כדורגל כלול כבר בפעילות ('+kf+')':' + כדורגל '+kf):'')+')</div></div>';
-  const fh='<div class="card '+(wed?'!border-amber-400 ring-4 ring-amber-500/50':'')+'"'+(wed?' style="background:linear-gradient(160deg,#92400e,#451a03)"':'')+'>'+(wed?'<div class="text-center font-black text-amber-300 mb-1">🔥 היום יום רביעי – כדורגל הערב! 🔥</div>':'')+'<h2 class="font-black '+(wed?'text-2xl':'text-lg')+' mb-2">⚽ כדורגל של יום רביעי</h2>'+(done?'<div class="text-emerald-400 font-black mb-2">✅ הלכת לכדורגל – +50 🌾</div>':'<p class="text-sm mb-2">'+(wed?'המשחק הערב! עדכן אחרי שחזרת.':'המשחק הקבוע: יום רביעי בערב.')+'</p>')+'<label class="text-sm">כמה קלוריות נשרפו במשחק (לפי שעון הספורט)</label><div class="flex gap-2 mb-2"><input type="number" id="fbK" inputmode="numeric" placeholder="למשל 600" value="'+(kf||'')+'">'+(done?'<button class="btn b-stone !px-3 text-sm" onclick="fbUpd()">שמור</button>':'')+'</div>'+(done?'':'<button class="btn b-amber w-full '+(wed?'text-lg py-4':'')+'" onclick="fbGo()">הלכתי לכדורגל הערב! ⚽ (+50 🌾)</button>')+'</div>';
-  $('fbTop').innerHTML=wed?fh:'';$('fbBot').innerHTML=wed?'':fh}
-function stInc(c){const d=day();snap('סימון כדורגל');S.st[d]=Object.assign({n:0,k:0,g:0,m:0},S.st[d],{inc:c?1:0});save();render()}
+  $('stCard').innerHTML='<div class="card"><h2 class="font-black text-lg mb-2">👟 מעקב צעדים וקלוריות יומי (משעון / טלפון)</h2><label class="text-sm">צעדים שבוצעו היום</label><input type="number" id="stIn" inputmode="numeric" placeholder="למשל 8000" value="'+(st.n||'')+'" oninput="actSync()" class="mb-2"><label class="text-sm">קלוריות שנשרפו היום (ישירות מהשעון 🔥)</label><input type="number" id="stK" inputmode="numeric" placeholder="נחשב אוטומטית מהצעדים" value="'+(st.k||'')+'" oninput="actKin()"><div id="stDist" class="text-sm text-amber-200/80 mt-1">'+(st.n>0?'📏 מרחק משוער: ~'+(st.n*0.00075).toFixed(2)+' ק״מ':'')+'</div><div class="h-4 bg-stone-900 rounded-full overflow-hidden border-2 border-amber-900 mt-2"><div class="h-full bg-emerald-600" style="width:'+Math.min(100,Math.round((st.n||0)/sg*100))+'%"></div></div><div class="text-sm mt-1">'+fmt(st.n)+' / '+fmt(sg)+' צעדים (היעד שלך)</div><button class="btn b-green w-full mt-3" onclick="saveSteps()">עדכן ושמור פעילות יומית</button><div class="text-xs text-amber-200/70 mt-2">+10 🌾 על כל 2,000 צעדים · בונוס +40 🌾 ב-10,000+ · בהזנת קלוריות בלבד: +10 🌾 על כל 100 קל׳ (עד 60 ביום) · הרווחת היום: <b class="text-amber-400">'+(st.g||0)+' 🌾</b></div><div class="mt-3 rounded-xl bg-stone-900/60 border border-amber-900 p-2 text-sm"><b>סיכום קלוריות שרופות היום:</b> 🔥 ~'+fmt(tot)+' קל׳ (פעילות '+fmt(st.k)+(kf?(inc?' · כדורגל כלול כבר בפעילות ('+kf+')':' + כדורגל '+kf):'')+')</div></div>';
+  $('fbCard').innerHTML='<div class="card"><h2 class="font-black text-lg mb-2">⚽ אימון כדורגל</h2>'+(done?'<div class="text-emerald-400 font-black mb-2">✅ השתתפת במשחק כדורגל היום'+(fb.at?' ('+fb.at+')':'')+' – +50 🌾</div>':'<p class="text-sm mb-2">שיחקת כדורגל היום? עדכן אחרי המשחק וקבל +50 🌾.</p>')+'<label class="text-sm">כמה קלוריות נשרפו במשחק (לפי שעון הספורט)</label><div class="flex gap-2 mb-2"><input type="number" id="fbK" inputmode="numeric" placeholder="למשל 600" value="'+(kf||'')+'">'+(done?'<button class="btn b-stone !px-3 text-sm" onclick="fbUpd()">שמור</button>':'')+'</div><label class="flex items-start gap-2 text-sm mb-3"><input type="checkbox" id="stInc" '+(inc?'checked':'')+' onchange="stInc(this.checked)" style="width:1.2rem;height:1.2rem;margin-top:.15rem;flex-shrink:0"><span>הצעדים/הקלוריות היומיים כבר כוללים את משחק הכדורגל</span></label>'+(done?'':'<button class="btn b-amber w-full text-lg py-4" onclick="fbGo()">השתתפתי במשחק כדורגל! ⚽</button><div class="text-xs text-center text-amber-200/70 mt-2">+50 🌾 על השתתפות במשחק</div>')+'</div>'}
+function stInc(c){const d=day(),kv=$('fbK')?$('fbK').value:'';snap('סימון כדורגל');S.st[d]=Object.assign({n:0,k:0,g:0,m:0},S.st[d],{inc:c?1:0});save();render();if($('fbK')&&!(S.fb[d]||{}).done)$('fbK').value=kv}
 function saveSteps(){
   const d=day(),o=S.st[d]||{n:0,k:0,g:0,m:0},n=Math.max(0,Math.round(+$('stIn').value||0)),kv=Math.max(0,Math.round(+$('stK').value||0));
   if(n>100000||kv>20000){toast('הזן ערכים תקינים');return}
@@ -384,41 +418,65 @@ function saveSteps(){
   const m=$('stK').value!==''&&(!n||kv!==actKcal(n))?1:0,k=kv||actKcal(n);
   if(n===o.n&&k===o.k){toast('ללא שינוי');return}
   snap('פעילות יומית');
-  const tg=n>0?Math.floor(n/2000)*10+(n>=10000?40:0):Math.min(60,Math.floor(k/100)*10),diff=tg-o.g;
+  const tg=n>0?Math.floor(n/2000)*10+(n>=10000?40:0):Math.min(60,Math.floor(k/100)*10),diff=tg-(o.g||0);
   S.st[d]={n,k,g:tg,m,inc:o.inc||0};
-  if(diff!==0)add(diff,diff>0?(n?'צעדים: '+n.toLocaleString('en-US')+' 👟 · ~'+k+' קל׳':'פעילות יומית: '+k+' קל׳ 🔥'):'');else{save();render()}}
-function fbGo(){const d=day();if((S.fb[d]||{}).done)return;const k=Math.max(0,Math.min(3000,Math.round(+$('fbK').value||0)));snap('כדורגל');S.fb[d]={done:1,k,at:nowHM()};add(50,'הלכתי לכדורגל ⚽'+(k?' · '+k+' קל׳ נשרפו':''))}
+  if(diff!==0)add(diff,diff>0?(n?'צעדים: '+fmt(n)+' 👟 · ~'+k+' קל׳':'פעילות יומית: '+k+' קל׳ 🔥'):'');else{save();render()}}
+function fbGo(){const d=day();if((S.fb[d]||{}).done)return;const k=Math.max(0,Math.min(3000,Math.round(+$('fbK').value||0)));snap('כדורגל');S.fb[d]={done:1,k,at:nowHM()};add(50,'השתתפתי במשחק כדורגל ⚽'+(k?' · '+k+' קל׳ נשרפו':''))}
 function fbUpd(){const d=day(),f=S.fb[d];if(!f||!f.done)return;const k=Math.max(0,Math.min(3000,Math.round(+$('fbK').value||0)));snap('קלוריות כדורגל');f.k=k;add(0,'כדורגל: עודכנו '+k+' קל׳ 🔥')}
-function dayStat(d){const tk=S.tasks[d]||{},st=S.st[d]||{},fb=S.fb[d]||{},f=S.fd[d]||{},ex=EX.filter(e=>tk[e[0]]).length,eat=Object.values(f).flat().reduce((s,e)=>s+((e.a&&+e.a.kcal)||0),0),w=S.water[d]||0;return{ex,w,n:st.n||0,k:(st.k||0)+(st.inc?0:(fb.k||0)),eat:Math.round(eat),fb:!!fb.done,ok:w>=tgt()&&(ex>0||(st.n||0)>=5000||!!fb.done)}}
+function dayStat(d){const tk=S.tasks[d]||{},st=S.st[d]||{},fb=S.fb[d]||{},f=S.fd[d]||{},ex=EX.filter(e=>tk[e[0]]).length,eat=Object.values(f).flat().reduce((s,e)=>s+((e.a&&+e.a.kcal)||0),0),w=S.water[d]||0;return{ex,w,n:st.n||0,k:(st.k||0)+(st.inc?0:(fb.k||0)),eat:Math.round(eat),fb:!!fb.done,fk:fb.k||0,ok:w>=tgt()&&(ex>0||(st.n||0)>=5000||!!fb.done)}}
+const WD=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const dOf=k=>new Date(k+'T12:00:00'),dKey=dt=>dt.toLocaleDateString('sv'),fmtD=k=>k.split('-').reverse().join('.');
+const wOn=d=>(S.w.log.find(l=>l.d===d)||{}).w;
+const eatT=e=>e.at||new Date(e.ts).toTimeString().slice(0,5);
+function dayWork(d){const tk=S.tasks[d]||{};return EX.filter(e=>tk[e[0]]).map(e=>e[2]+' '+e[1]).concat(T.filter(t=>tk[t[0]]).map(t=>t[2]+' '+t[1]))}
+function dayFood(d){const f=S.fd[d]||{};return Object.keys(MN).flatMap(id=>(f[id]||[]).map(e=>({id,t:eatT(e),e}))).sort((a,b)=>a.t<b.t?-1:a.t>b.t?1:0)}
+/* היסטוריה */
+let HS='',HN=14;
+function allDays(){const s=new Set([day()]);[S.water,S.tasks,S.st,S.fb,S.fd,S.coffee].forEach(o=>Object.keys(o||{}).forEach(k=>s.add(k)));S.w.log.forEach(l=>s.add(l.d));return [...s].filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()}
+function hasData(d){const s=dayStat(d);return !!(s.w||s.n||s.k||s.eat||s.ex||s.fb||wOn(d)||dayWork(d).length)}
+function selDay(k){HS=HS===k?'':k;const i=allDays().indexOf(k);if(i>=HN)HN=i+1;drawHist();setTimeout(()=>{const e=$('hd_'+k);if(e)e.scrollIntoView({behavior:'smooth',block:'center'})},50)}
+function drawHist(){
+  if(!$('histView'))return;
+  const today=day(),t0=dOf(today),start=new Date(t0);start.setDate(start.getDate()-34-start.getDay());
+  let cells='';for(const c=new Date(start);c<=t0;c.setDate(c.getDate()+1)){const k=dKey(c),s=dayStat(k),has=hasData(k),bg=s.ok?'background:#059669':has?'background:#b45309':'background:#292524';cells+='<div class="cd'+(k===HS?' sel':'')+(k===today?' ring-2 ring-amber-400':'')+'" style="'+bg+'" onclick="selDay(\''+k+'\')">'+c.getDate()+'<small>'+(s.fb?'⚽':wOn(k)?'⚖️':s.ex?'🏋️':'&nbsp;')+'</small></div>'}
+  const cal='<div class="card"><div class="font-black text-lg mb-2">🗓️ לוח התקדמות – 5 שבועות אחרונים</div><div class="cal mb-1 text-center text-xs text-amber-200/70">'+['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map(x=>'<div>'+x+'</div>').join('')+'</div><div class="cal">'+cells+'</div><div class="flex flex-wrap gap-3 text-xs mt-3"><span><span class="inline-block w-3 h-3 rounded" style="background:#059669"></span> עמדת ביעדים</span><span><span class="inline-block w-3 h-3 rounded" style="background:#b45309"></span> יש פעילות</span><span><span class="inline-block w-3 h-3 rounded" style="background:#292524;border:1px solid #57534e"></span> אין נתונים</span></div><div class="text-xs text-amber-200/60 mt-1">לחץ על יום כדי לראות את הסיכום שלו 👇</div></div>';
+  const L7=[];for(let i=0;i<7;i++){const c=new Date(t0);c.setDate(c.getDate()-i);L7.push(dKey(c))}
+  const ss=L7.map(dayStat),act=L7.filter(hasData).length||1,sum=f=>ss.reduce((a,s)=>a+f(s),0),wl=S.w.log.filter(l=>L7.includes(l.d)).sort((a,b)=>a.d<b.d?-1:1),wch=wl.length>1?(wl[wl.length-1].w-wl[0].w):null;
+  const B=(ic,v,l)=>'<div class="rounded-xl bg-stone-900/60 border border-amber-900 p-2 text-center"><div class="text-xl">'+ic+'</div><div class="font-black text-amber-400">'+v+'</div><div class="text-xs">'+l+'</div></div>';
+  const wk='<div class="card"><div class="font-black text-lg mb-2">📊 סיכום 7 הימים האחרונים</div><div class="grid grid-cols-3 gap-2">'+B('🍽️','~'+fmt(sum(s=>s.eat)/act),'ממוצע נאכל ליום')+B('🔥','~'+fmt(sum(s=>s.k)/act),'ממוצע נשרף ליום')+B('👟',fmt(sum(s=>s.n)),'סה״כ צעדים')+B('💧',(sum(s=>s.w)/act).toFixed(1),'ממוצע כוסות ליום')+B('🏋️',sum(s=>s.ex),'תרגילים שבוצעו')+B('⚽',sum(s=>s.fb?1:0),'משחקי כדורגל')+'</div><div class="text-sm mt-2">✅ ימים שעמדת ביעדים: <b>'+ss.filter(s=>s.ok).length+'/7</b>'+(wch!==null?' · ⚖️ שינוי משקל: <b class="'+(wch<=0?'text-emerald-400':'text-orange-400')+'">'+(wch>0?'+':'')+wch.toFixed(1)+' ק״ג</b>':'')+'</div></div>';
+  const days=allDays().filter(k=>k===today||hasData(k)),q=plan();
+  const tl=days.slice(0,HN).map(k=>{const s=dayStat(k),dt=dOf(k),wt=wOn(k),wo=dayWork(k),fd=dayFood(k),cf=S.coffee[k]||0,net=s.eat-s.k,open=k===HS;
+    return '<div id="hd_'+k+'" class="card !p-3'+(open?' ring-4 ring-amber-500/60':'')+'"><div class="flex justify-between items-center cursor-pointer" onclick="selDay(\''+k+'\')"><div><div class="font-black">'+(k===today?'היום · ':'')+'יום '+WD[dt.getDay()]+'</div><div class="text-xs text-amber-200/70">📅 '+fmtD(k)+'</div></div><div class="text-left">'+(s.ok?'<span class="text-emerald-400 font-black">✅ יום מוצלח</span>':'<span class="text-amber-200/60 text-sm">'+(k===today?'בתהליך...':'לא עמד ביעדים')+'</span>')+'</div></div><div class="grid grid-cols-3 gap-1 text-center text-xs mt-2"><div class="rounded-lg bg-amber-950 p-1">🍽️<br><b>'+fmt(s.eat)+'</b><br>נאכלו'+(q.cal?' / '+q.cal:'')+'</div><div class="rounded-lg bg-amber-950 p-1">🔥<br><b>'+fmt(s.k)+'</b><br>נשרפו בפעילות</div><div class="rounded-lg bg-amber-950 p-1">⚖️<br><b class="'+(net>0?'':'text-emerald-400')+'">'+(net>0?'+':'')+fmt(net)+'</b><br>מאזן</div><div class="rounded-lg bg-amber-950 p-1">👟<br><b>'+fmt(s.n)+'</b><br>צעדים</div><div class="rounded-lg bg-amber-950 p-1">💧<br><b>'+s.w+'/'+tgt()+'</b><br>כוסות מים</div><div class="rounded-lg bg-amber-950 p-1">☕<br><b>'+cf+'</b><br>קפה</div></div>'+(wo.length||s.fb||wt?'<div class="text-sm mt-2 space-y-1">'+(wo.length?'<div>🏋️ <b>אימונים:</b> '+wo.map(esc).join(' · ')+'</div>':'')+(s.fb?'<div>⚽ <b>כדורגל:</b> השתתפות'+(s.fk?' · '+s.fk+' קל׳':'')+(S.fb[k].at?' · '+S.fb[k].at:'')+'</div>':'')+(wt?'<div>⚖️ <b>שקילה:</b> '+wt+' ק״ג</div>':'')+'</div>':'')+(open?'<div class="mt-3 border-t border-amber-900 pt-2"><div class="font-bold text-sm mb-1">📓 מה נאכל ('+fd.length+'):</div>'+(fd.length?fd.map(x=>'<div class="text-sm flex gap-2 py-0.5"><span class="text-amber-400 font-bold ltr">'+x.t+'</span><span class="flex-1">'+MN[x.id][0]+' '+esc(x.e.t||'(לפי תמונה)')+'</span><span class="text-amber-200/70 whitespace-nowrap">~'+fmt(x.e.a.kcal)+' קל׳</span></div>').join(''):'<div class="text-sm text-amber-200/60">לא נרשם אוכל ביום הזה</div>')+'</div>':'<div class="text-xs text-amber-400 mt-2 cursor-pointer" onclick="selDay(\''+k+'\')">▼ פרטי ארוחות</div>')+'</div>'}).join('');
+  const more=days.length>HN?'<button class="btn b-stone w-full" onclick="HN+=14;drawHist()">הצג ימים קודמים ⬇️</button>':'';
+  const wlog=S.w.log.length?'<div class="card"><div class="font-black text-lg mb-2">⚖️ יומן שקילות</div>'+S.w.log.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,12).map((l,i,a)=>{const pv=a[i+1],df=pv?l.w-pv.w:0;return '<div class="flex justify-between border-b border-amber-900/50 py-1 text-sm"><span>📅 '+fmtD(l.d)+'</span><span><b>'+l.w+' ק״ג</b>'+(pv&&df?' <span class="'+(df<0?'text-emerald-400':'text-orange-400')+'">('+(df>0?'+':'')+df.toFixed(1)+')</span>':'')+'</span></div>'}).join('')+'</div>':'';
+  $('histView').innerHTML=cal+wk+'<div class="font-black text-lg px-1">🕰️ ציר זמן יומי</div>'+tl+more+wlog}
 function ctxTxt(){
-  const p=S.pf;if(!p)return '\n\nהמשתמש עדיין לא מילא שאלון פרופיל – ענה בכלליות והצע לו למלא אותו (הגדרות ⚙️ ← ערוך פרופיל).';
-  const d=day(),q=plan(),tg=tgt(),now=new Date(),tk=S.tasks[d]||{},st=S.st[d]||{n:0,k:0},fb=S.fb[d]||{},f=S.fd[d]||{},w=S.water[d]||0,cf=S.coffee[d]||0,ds=dayStat(d),wed=now.getDay()===3;
-  let ri=0;R.forEach((r,k)=>{if(S.grains>=r[0])ri=k});const nx=R[ri+1],left=q.cal?q.cal-ds.eat:null;
-  const eatT=e=>e.at||new Date(e.ts).toTimeString().slice(0,5),items=Object.keys(MN).flatMap(id=>(f[id]||[]).map(e=>({id,t:eatT(e),e}))).sort((a,b)=>a.t<b.t?-1:a.t>b.t?1:0);
+  const p=S.pf;if(!p)return '\n\nהמשתמש עדיין לא מילא פרופיל – ענה בכלליות והצע לו למלא אותו (👤 ← ערוך פרופיל).';
+  const d=day(),q=plan(),tg=tgt(),now=new Date(),st=S.st[d]||{n:0,k:0},fb=S.fb[d]||{},w=S.water[d]||0,cf=S.coffee[d]||0,ds=dayStat(d),u=curU(),ri=rankOf(S.grains),nx=R[ri+1],left=q.cal?q.cal-ds.eat:null,items=dayFood(d);
   const food=items.length?items.map(x=>'• '+x.t+' – '+MN[x.id][1]+': '+(x.e.t||'לפי תמונה')+' (~'+nn(x.e.a.kcal)+' קל׳, סוכר '+nn(x.e.a.sugar)+' ג׳, שומן '+nn(x.e.a.fat)+' ג׳, חלבון '+nn(x.e.a.protein)+' ג׳)').join('\n'):'• עדיין לא נרשם דבר היום';
-  const ex=EX.filter(e=>tk[e[0]]).map(e=>e[1]+' ('+e[3][Math.min((S.prog[e[0]]||{lv:0}).lv,e[3].length-1)]+')').concat(T.filter(t=>tk[t[0]]).map(t=>t[1]));
+  const ex=dayWork(d).map(x=>x.replace(/^\S+\s/,''));
   const hist=[];let streak=0,run=true;
-  for(let i=1;i<=7;i++){const s=dayStat(new Date(Date.now()-i*864e5).toLocaleDateString('sv'));hist.push('• '+(i===1?'אתמול':'לפני '+i+' ימים')+': מים '+s.w+'/'+tg+', צעדים '+s.n+', אימונים '+s.ex+(s.fb?', כדורגל':'')+', נאכלו ~'+s.eat+' קל׳ – '+(s.ok?'עמד ביעדים ✅':'לא עמד ביעדים'));if(run&&s.ok)streak++;else run=false}
+  for(let i=1;i<=7;i++){const c=new Date(dOf(d));c.setDate(c.getDate()-i);const k=dKey(c),s=dayStat(k),wt=wOn(k),fi=dayFood(k);hist.push('• '+(i===1?'אתמול':'לפני '+i+' ימים')+' ('+WD[c.getDay()]+' '+fmtD(k)+'): מים '+s.w+'/'+tg+', צעדים '+s.n+', אימונים '+s.ex+(s.fb?', כדורגל ('+(s.fk||0)+' קל׳'+((S.fb[k]||{}).at?' בשעה '+S.fb[k].at:'')+')':'')+', נאכלו ~'+s.eat+' קל׳'+(fi.length?' (ארוחה אחרונה ב-'+fi[fi.length-1].t+')':'')+', נשרפו ~'+s.k+' קל׳'+(wt?', שקילה '+wt+' ק״ג':'')+' – '+(s.ok?'עמד ביעדים ✅':'לא עמד ביעדים'));if(run&&s.ok)streak++;else run=false}
   if(ds.ok)streak++;
   return '\n\n=== נתוני המשתמש הפעיל (מעודכנים ברגע הפנייה) ===\n'+[
-    'עכשיו: יום '+['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][now.getDay()]+', '+now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),
-    'פרופיל: '+p.name+', '+(p.sex==='m'?'גבר':'אישה')+', גיל '+p.age+', גובה '+p.h+' ס״מ, רמת פעילות: '+ACT[p.act],
+    'עכשיו: יום '+WD[now.getDay()]+', '+now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),
+    'פרופיל: '+p.name+' (אווטאר: '+avOf(u.av)[0]+' '+avOf(u.av)[1]+'), '+(p.sex==='f'?'אישה':'גבר')+(p.age?', גיל '+p.age:'')+(p.h?', גובה '+p.h+' ס״מ':'')+', רמת פעילות: '+ACT[p.act||0],
     'משקל: עכשיו '+S.w.cur+' ק״ג, התחלה '+S.w.start+', יעד '+S.w.goal+' ק״ג (ירד עד כה '+Math.max(0,S.w.start-S.w.cur).toFixed(1)+' ק״ג, נשארו '+Math.max(0,S.w.cur-S.w.goal).toFixed(1)+' ק״ג)',
-    'גרגרים: '+S.grains+' 🌾, דרגה: '+R[ri][1]+(nx?' (חסרים '+(nx[0]-S.grains)+' גרגרים לדרגת '+nx[1]+')':' (הדרגה העליונה)'),
-    'יעד קלורי יומי מומלץ: ~'+q.cal+' קל׳',
-    'אוכל היום (סה״כ ~'+ds.eat+' קל׳'+(left!==null?', נותרו ~'+left+' קל׳ ליעד':'')+'):\n'+food,
+    'גרגרים: '+S.grains+' 🌾, דרגה: '+R[ri][2]+' '+R[ri][1]+' ('+(ri+1)+'/'+R.length+')'+(nx?' – חסרים '+(nx[0]-S.grains)+' גרגרים לדרגת '+nx[1]:' (הדרגה העליונה)'),
+    q.cal?'יעד קלורי יומי מומלץ: ~'+q.cal+' קל׳':'',
+    'אוכל היום, לפי סדר השעות (סה״כ ~'+ds.eat+' קל׳'+(left!==null?', נותרו ~'+left+' קל׳ ליעד':'')+'):\n'+food,
     'מים: '+w+' כוסות ('+(w*0.25).toFixed(2)+' ליטר) מתוך יעד '+tg+' כוסות ('+(tg*0.25).toFixed(1)+' ליטר)',
     'קפה היום: '+cf+' כוסות',
-    'צעדים: '+(st.n||0)+' (~'+((st.n||0)*0.00075).toFixed(1)+' ק״מ); קלוריות שנשרפו מצעדים/שעון: '+(st.k||0),
+    'צעדים: '+(st.n||0)+' מתוך יעד '+SG()+' (~'+((st.n||0)*0.00075).toFixed(2)+' ק״מ); קלוריות שנשרפו מצעדים/שעון: '+(st.k||0),
     'אימונים שבוצעו היום: '+(ex.length?ex.join(', '):'אף אחד עדיין'),
-    wed?'יום רביעי – כדורגל: '+(fb.done?'השתתף (סומן בשעה '+(fb.at||'לא ידועה')+'), נשרפו '+(fb.k||0)+' קל׳':'עדיין לא סומן'):(fb.done?'כדורגל היום: נשרפו '+(fb.k||0)+' קל׳':''),
-    'סה״כ קלוריות שנשרפו היום: ~'+ds.k+' קל׳'+(st.inc&&fb.done?' (קלוריות הכדורגל כבר כלולות בצעדים/שעון – לא נספרו פעמיים)':' (פעילות + כדורגל)'),
+    'כדורגל היום: '+(fb.done?'השתתף במשחק (סומן בשעה '+(fb.at||'לא ידועה')+'), נשרפו '+(fb.k||0)+' קל׳':'לא סומן משחק'),
+    'סה״כ קלוריות שנשרפו בפעילות היום: ~'+ds.k+' קל׳'+(st.inc&&fb.done?' (קלוריות הכדורגל כבר כלולות בצעדים/שעון – לא נספרו פעמיים)':fb.done?' (פעילות + כדורגל)':''),
     'היסטוריה – 7 ימים אחרונים (רצף ימים מוצלחים: '+streak+'):\n'+hist.join('\n'),
     '(יום מוצלח = שתה את יעד המים וגם התאמן / עשה 5,000+ צעדים / שיחק כדורגל)',
-    'הנחיות התנהגות: אתה מאמן אישי נמרץ של ממלכת הנמלים 🐜. התייחס ישירות לנתונים האמיתיים שלמעלה (למשל: ״שתית רק 3 כוסות מים היום״, ״כל הכבוד על 8,000 הצעדים״, ״נשארו לך עוד X קלוריות לפי מה שאכלת בצהריים״, ״מעולה ששרפת 600 קלוריות בכדורגל הערב!״). נתח גם את שעות הארוחות: אכילה מאוחרת בלילה (אחרי 20:00 – הזכר את כלל 3 שעות לפני השינה), הפרשים ארוכים מדי בין ארוחות, ותזמון הארוחות לפני ואחרי כדורגל (ביום רביעי: מה כדאי לאכול כשעתיים לפני המשחק ומה אחריו להתאוששות). אמור במפורש אם השעה מתאימה ומה כדאי לאכול או לשפר בשעות הללו, וציין גם קפה אחרי 16:00. אל תמציא נתונים שלא מופיעים כאן – אם משהו עוד לא נרשם, אמור זאת והצע לעדכן. תשובות קצרות, תומכות, ממוקדות ופרקטיות. כשהוא שואל על מאכל, שלב את מצבו הנוכחי (קלוריות שנותרו, חלבון, מים, פעילות והשעה עכשיו).'
+    'הנחיות התנהגות: אתה המאמן האישי הנלהב של ממלכת הנמלים 🐜. פנה למשתמש בשמו, וחבר את העצות לדרגה שלו ולגרגרים שחסרים לדרגה הבאה. התייחס ישירות לנתונים האמיתיים שלמעלה (למשל: ״שתית רק 3 כוסות מים היום״, ״כל הכבוד על 8,000 הצעדים״, ״נשארו לך עוד X קלוריות לפי מה שאכלת בצהריים״, ״מעולה ששרפת 600 קלוריות בכדורגל!״). נתח את שעות הארוחות: אכילה מאוחרת בלילה (אחרי 20:00 – הזכר את כלל 3 שעות לפני השינה), הפרשים ארוכים מדי בין ארוחות, ותזמון הארוחות סביב משחקי כדורגל (לפי שעת המשחק שנרשמה: מה כדאי לאכול כשעתיים לפני המשחק, ומה אחריו להתאוששות – חלבון, פחמימה מורכבת ונוזלים). זהה דפוסים מ-7 הימים האחרונים (מים, צעדים, אכילה מאוחרת, ימים בלי אימון). אמור במפורש אם השעה מתאימה ומה כדאי לאכול או לשפר, וציין גם קפה אחרי 16:00. סיים כל תשובה ב-1–3 צעדים קונקרטיים לביצוע היום. אל תמציא נתונים שלא מופיעים כאן – אם משהו עוד לא נרשם, אמור זאת והצע לעדכן. תשובות קצרות, תומכות, ממוקדות ופרקטיות.'
   ].filter(Boolean).join('\n')}
 function checkN(){
-  if(G.nm==='off'||!('Notification' in window)||Notification.permission!=='granted')return;
+  if(!G.cur||!S||G.nm==='off'||!('Notification' in window)||Notification.permission!=='granted')return;
   const n=new Date(),m=n.getHours()*60+n.getMinutes(),d=day(),td=S.tasks[d]||{},ml=S.meals[d]||{},now=Date.now();
   Object.keys(S.ns).forEach(k=>{if(!k.endsWith(d))delete S.ns[k]});
   if(m>=480&&m<=1290){const base=Math.max(S.lastW||0,S.nW||0,new Date(n.getFullYear(),n.getMonth(),n.getDate(),8).getTime());if(now-base>=7200000){S.nW=now;fire('מים!','עברו שעתיים בלי מים! שתה כוס מים עכשיו כדי להאיץ את חילוף החומרים')}}
@@ -436,27 +494,69 @@ async function enableNotif(){
   const p=await Notification.requestPermission();
   if(p==='granted'){S.notif=true;save();startNotif();render();try{new Notification('🐜 Ant Fitness',{body:'התזכורות הופעלו! 💧'})}catch(e){}}else toast('ההתראות נחסמו');
 }
-let OB={sex:'m',act:0};
 const ACT=['עצלן מוחלט','פעילות קלה','פעיל בינוני'];
 const cp=o=>JSON.parse(JSON.stringify(o===undefined?null:o));
 function snap(l){const d=day();S.undo.push({l,d,g:S.grains,tk:cp(S.tasks[d]),wa:S.water[d]||0,wb:S.wb[d]||0,cf:S.coffee[d]||0,ml:cp(S.meals[d]),fd:cp(S.fd[d]),st:cp(S.st[d]),fb:cp(S.fb[d]),pr:cp(S.prog),h:cp(S.hist)});S.undo=S.undo.slice(-10)}
 function undo(){const u=S.undo.pop();if(!u){toast('אין מה לבטל');return}S.grains=u.g;S.tasks[u.d]=u.tk||{};S.water[u.d]=u.wa;S.wb[u.d]=u.wb;S.coffee[u.d]=u.cf;S.meals[u.d]=u.ml||{};S.fd[u.d]=u.fd||{};if('st' in u){S.st[u.d]=u.st||{n:0,g:0};S.fb[u.d]=u.fb||{}}S.prog=u.pr;S.hist=u.h;save();render();toast('↩️ בוטל: '+u.l)}
-function plan(){const p=S.pf;if(!p||!S.w.cur)return{cal:0,water:tgt()};const w=S.w.cur,bmr=10*w+6.25*p.h-5*p.age+(p.sex==='m'?5:-161),tdee=bmr*[1.2,1.375,1.55][p.act],def=S.w.goal<w?Math.min(500,tdee*0.2):0;return{cal:Math.round(Math.min(tdee,Math.max(tdee-def,p.sex==='m'?1500:1200))/10)*10,water:tgt()}}
-function profTxt(){const p=S.pf;if(!p)return'';const q=plan();return '\nנתוני המשתמש הפעיל: שם '+p.name+', '+(p.sex==='m'?'גבר':'אישה')+', גיל '+p.age+', גובה '+p.h+' ס״מ, משקל נוכחי '+S.w.cur+' ק״ג, משקל יעד '+S.w.goal+' ק״ג, רמת פעילות: '+ACT[p.act]+'. יעד קלורי יומי מומלץ ~'+q.cal+' קלוריות, יעד מים '+q.water+' כוסות. התאם כל ניתוח, כל גרסה חכמה וכל תוכנית קיזוז ביתית (חזרות, סבבים ודקות הליכה) במדויק לנתונים האלה, ופנה אליו בשמו.'}
-function setTop(){const B=(m,t)=>'<button class="btn '+(G.nm===m?'b-amber':'b-stone')+' w-full !p-2 text-sm" onclick="setNm(\''+m+'\')">'+t+'</button>',st=typeof Notification==='undefined'?'הדפדפן לא תומך בהתראות':Notification.permission==='granted'?'הרשאת התראות: אושרה ✔ (פועלות כל עוד האפליקציה פתוחה)':Notification.permission==='denied'?'ההתראות חסומות בדפדפן – לחץ על "פעילות" להסבר איך לאפשר':'הרשאה עדיין לא אושרה – בחר "פעילות" או "שקטות" כדי לאשר';return '<div class="grid grid-cols-2 gap-2 my-3"><button class="btn b-amber !p-2 text-sm" onclick="usersSheet()">החלף משתמש 👤</button><button class="btn b-stone !p-2 text-sm" onclick="onboard()">✏️ ערוך פרופיל</button></div><div class="font-bold mb-1">🔔 התראות</div><div class="space-y-2">'+B('on','🔔 התראות פעילות (עם צליל/רטט)')+B('silent','🔕 התראות שקטות')+B('off','⛔ כיבוי התראות')+'</div><div class="text-xs text-amber-200/70 mt-1 mb-4">'+st+'</div>'}
+function plan(){const p=S.pf;if(!p||!S.w.cur||!p.h||!p.age)return{cal:0,water:tgt()};const w=S.w.cur,bmr=10*w+6.25*p.h-5*p.age+(p.sex==='m'?5:-161),tdee=bmr*[1.2,1.375,1.55][p.act],def=S.w.goal<w?Math.min(500,tdee*0.2):0;return{cal:Math.round(Math.min(tdee,Math.max(tdee-def,p.sex==='m'?1500:1200))/10)*10,water:tgt()}}
+function profTxt(){const p=S.pf;if(!p)return'';const q=plan();return '\nנתוני המשתמש הפעיל: שם '+p.name+', '+(p.sex==='f'?'אישה':'גבר')+(p.age?', גיל '+p.age:'')+(p.h?', גובה '+p.h+' ס״מ':'')+', משקל נוכחי '+S.w.cur+' ק״ג, משקל יעד '+S.w.goal+' ק״ג, רמת פעילות: '+ACT[p.act||0]+'.'+(q.cal?' יעד קלורי יומי מומלץ ~'+q.cal+' קלוריות,':'')+' יעד מים '+q.water+' כוסות. התאם כל ניתוח, כל גרסה חכמה וכל תוכנית קיזוז ביתית (חזרות, סבבים ודקות הליכה) במדויק לנתונים האלה, ופנה אליו בשמו.'}
+function setTop(){const B=(m,t)=>'<button class="btn '+(G.nm===m?'b-amber':'b-stone')+' w-full !p-2 text-sm" onclick="setNm(\''+m+'\')">'+t+'</button>',st=typeof Notification==='undefined'?'הדפדפן לא תומך בהתראות':Notification.permission==='granted'?'הרשאת התראות: אושרה ✔ (פועלות כל עוד האפליקציה פתוחה)':Notification.permission==='denied'?'ההתראות חסומות בדפדפן – לחץ על "פעילות" להסבר איך לאפשר':'הרשאה עדיין לא אושרה – בחר "פעילות" או "שקטות" כדי לאשר';return '<div class="grid grid-cols-2 gap-2 my-3"><button class="btn b-amber !p-2 text-sm" onclick="acctSheet()">החלף משתמש 👤</button><button class="btn b-stone !p-2 text-sm" onclick="profForm(\'edit\')">✏️ ערוך פרופיל</button></div><div class="font-bold mb-1">🔔 התראות</div><div class="space-y-2">'+B('on','🔔 התראות פעילות (עם צליל/רטט)')+B('silent','🔕 התראות שקטות')+B('off','⛔ כיבוי התראות')+'</div><div class="text-xs text-amber-200/70 mt-1 mb-4">'+st+'</div>'}
 async function setNm(m){if(m==='off'){offStep(1);return}if(!('Notification' in window)){toast('הדפדפן לא תומך בהתראות');return}if(Notification.permission==='denied'){notifGuide();return}if(Notification.permission!=='granted'){const p=await Notification.requestPermission();if(p!=='granted'){if(p==='denied')notifGuide();else toast('לא אושרה הרשאת התראות');return}}G.nm=m;save();startNotif();openSettings();fire('התראות הופעלו','בדיקה: ההתראות עובדות ✔');render()}
 function offStep(n){const X=[['אתה בטוח שאתה רוצה לכבות את ההתראות? ההתראות הן הדרך שלך לנצח את הדחיינות!','השאר פעיל','המשך בכיבוי'],['אזהרה: בכיבוי התראות לא תקבל מידע חיוני על הבריאות שלך, תזכורות מים ונזקי ג׳אנק פוד בזמן אמת!','התחרטתי, השאר','עדיין רוצה לכבות'],['טוב, אין ברירה... אתה בטוח שזה סופי? העצלנות מנסה לנצח אותך כאן!','השאר התראות','כבה סופית']][n-1];sheet('<div class="text-center"><div class="text-5xl mb-2">'+['🤔','⚠️','😈'][n-1]+'</div><p class="text-lg font-black mb-4">'+X[0]+'</p><div class="space-y-3"><button class="btn b-green w-full" onclick="openSettings()">'+X[1]+'</button><button class="btn b-stone w-full" onclick="'+(n<3?'offStep('+(n+1)+')':'offDo()')+'">'+X[2]+'</button></div></div>')}
 function offDo(){G.nm='off';clearInterval(nt);save();openSettings();toast('ההתראות כובו');render()}
-function usersSheet(){sheet('<h3 class="text-xl font-black mb-3">👤 משתמשים</h3><div class="space-y-2 mb-3">'+G.users.map(u=>'<button class="btn '+(u.id===G.cur?'b-amber':'b-stone')+' w-full" onclick="switchU(\''+u.id+'\')">'+(u.id===G.cur?'✅ ':'')+esc(u.name)+'</button>').join('')+'</div><button class="btn b-green w-full" onclick="newU()">➕ הוסף פרופיל חדש</button>')}
-function switchU(id){if(id===G.cur){closeSheet();return}save();G.cur=id;ld();save();afterLoad();closeSheet();toast('שלום '+((G.users.find(u=>u.id===id)||{}).name||''));if(!S.pf)setTimeout(onboard,400)}
-function newU(){save();const id='u'+Date.now();G.users.push({id,name:'חדש'});G.cur=id;ld();save();afterLoad();onboard()}
-function afterLoad(){DR={};DT={};ER={};$('wCur').value='';$('wGoal').value='';render();drawChat()}
-function onboard(){const p=S.pf||{};OB={sex:p.sex||'m',act:p.act||0};sheet('<h3 class="text-xl font-black mb-1">🐜 שאלון התאמה אישית</h3><p class="text-sm text-amber-200/70 mb-3">כדי שהמים, הקלוריות והאימונים יתאימו בדיוק אליך</p><label class="text-sm">שם / כינוי</label><input type="text" id="oN" value="'+esc(p.name||'')+'" class="mb-2"><label class="text-sm">מין</label><div class="grid grid-cols-2 gap-2 mb-2" id="oS"></div><div class="grid grid-cols-2 gap-2 mb-2"><div><label class="text-sm">גיל</label><input type="number" id="oA" inputmode="numeric" value="'+(p.age||'')+'"></div><div><label class="text-sm">גובה (ס״מ)</label><input type="number" id="oH" inputmode="numeric" value="'+(p.h||'')+'"></div><div><label class="text-sm">משקל נוכחי (ק״ג)</label><input type="number" id="oW" step="0.1" inputmode="decimal" value="'+(S.w.cur||'')+'"></div><div><label class="text-sm">משקל יעד (ק״ג)</label><input type="number" id="oG" step="0.1" inputmode="decimal" value="'+(S.w.goal||'')+'"></div></div><label class="text-sm">רמת פעילות נוכחית</label><div class="grid grid-cols-3 gap-2 mb-4" id="oC"></div><button class="btn b-green w-full" onclick="obSave()">שמור והתחל 🐜</button>');obDraw()}
-function obDraw(){$('oS').innerHTML=[['m','זכר'],['f','נקבה']].map(x=>'<button class="btn '+(OB.sex===x[0]?'b-amber':'b-stone')+' !p-2" onclick="OB.sex=\''+x[0]+'\';obDraw()">'+x[1]+'</button>').join('');$('oC').innerHTML=ACT.map((a,i)=>'<button class="btn '+(OB.act===i?'b-amber':'b-stone')+' !p-2 text-xs" onclick="OB.act='+i+';obDraw()">'+a+'</button>').join('')}
-function obSave(){const n=$('oN').value.trim(),a=+$('oA').value,h=+$('oH').value,w=+$('oW').value,g=+$('oG').value;if(!n||!(a>=10&&a<=100)||!(h>=100&&h<=230)||!(w>=30&&w<=300)||!(g>=30&&g<=300)){toast('מלא את כל השדות בערכים הגיוניים');return}S.pf={name:n,sex:OB.sex,age:a,h,act:OB.act};const u=G.users.find(x=>x.id===G.cur);if(u)u.name=n;if(!S.w.start)S.w.start=w;S.w.cur=w;S.w.goal=g;const d=day(),l=S.w.log.find(x=>x.d===d);if(l)l.w=w;else S.w.log.push({d,w});EX.forEach(e=>{if(!S.prog[e[0]]){let lv=OB.act;if(e[0]==='pu'&&OB.sex==='f')lv=Math.min(lv,1);S.prog[e[0]]={lv:Math.min(lv,e[3].length-1),c:0}}});$('wCur').value='';$('wGoal').value='';save();render();const q=plan(),loss=g<w;sheet('<div class="text-center"><div class="text-5xl mb-2">🎯</div><h3 class="text-xl font-black mb-3">שלום '+esc(n)+'! התוכנית שלך מוכנה</h3></div><ul class="space-y-2 mb-4"><li>💧 מים: <b>'+q.water+' כוסות</b> (~'+(q.water*0.25).toFixed(1)+' ליטר) ביום</li><li>🔥 יעד קלורי: <b>~'+q.cal+' קל׳</b> ביום ('+(loss?'גירעון בטוח לירידה הדרגתית':'שמירה על המשקל')+')</li><li>🏋️ רמת פתיחה: <b>'+ACT[OB.act]+'</b> – התרגילים הותאמו אליה</li></ul><button class="btn b-amber w-full" onclick="closeSheet();go(\'work\')">יאללה לאימון 🐜</button>')}
-function init(){try{Object.assign(G,JSON.parse(localStorage.getItem('antfit_g'))||{})}catch(e){}if(!G.users||!G.users.length){let o=null;try{o=JSON.parse(localStorage.getItem(K))}catch(e){}G.users=[{id:'u1',name:'אני'}];G.cur='u1';if(o){G.key=o.key||'';try{localStorage.setItem('antfit_u_u1',JSON.stringify(o))}catch(e){}}}if(!G.cur)G.cur=G.users[0].id;ld();if(G.nm!=='off'&&'Notification' in window&&Notification.permission==='granted')startNotif()}
+/* פרופילים, התחברות וקוד PIN */
+const pinH=(id,p)=>{let h=5381;const s='antfit:'+id+':'+p;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)};
+let PU='',PIN='';
+function uGrains(id){try{return +(JSON.parse(localStorage.getItem('antfit_u_'+id))||{}).grains||0}catch(e){return 0}}
+function showLogin(id){PU=id||'';PIN='';closeSheet();$('login').classList.remove('hidden');drawLogin()}
+function drawLogin(){
+  const b=$('loginBody'),u=PU&&G.users.find(x=>x.id===PU);
+  if(u){const K=n=>'<button class="btn b-stone kp" onclick="pinKey('+n+')">'+n+'</button>';
+    b.innerHTML='<div class="text-center"><div class="text-7xl mb-2">'+avH(u.av)+'</div><div class="text-2xl font-black">'+esc(u.name)+'</div><div class="text-sm text-amber-200/70 mb-6">'+avOf(u.av)[1]+'</div><div class="text-lg font-bold mb-3">🔐 הקש קוד PIN בן 4 ספרות</div><div id="pinDots" class="flex justify-center gap-4 mb-8" dir="ltr">'+[0,1,2,3].map(i=>'<span class="pd'+(i<PIN.length?' on':'')+'"></span>').join('')+'</div><div class="grid grid-cols-3 gap-3 max-w-xs mx-auto" dir="ltr">'+[1,2,3,4,5,6,7,8,9].map(K).join('')+'<button class="btn b-stone kp" onclick="pinDel()" aria-label="מחק">⌫</button>'+K(0)+'<button class="btn b-red kp !text-base" onclick="showLogin()">חזרה</button></div></div>';return}
+  b.innerHTML='<div class="text-center mb-6"><div class="text-6xl mb-2">🐜</div><h1 class="text-3xl font-black text-amber-400">Ant Fitness</h1><p class="text-amber-200/80 mt-1">ממלכת הנמלים – '+(G.users.length?'בחר את הנמלה שלך':'ברוכים הבאים! צרו את הנמלה הראשונה')+'</p></div>'+(G.users.length?'<div class="grid grid-cols-2 gap-3 mb-5">'+G.users.map(u=>{const g=uGrains(u.id),r=R[rankOf(g)];return '<button class="card !p-3 text-center" onclick="pickU(\''+u.id+'\')"><div class="text-5xl mb-1">'+avH(u.av)+'</div><div class="font-black text-lg truncate">'+esc(u.name)+'</div><div class="text-xs text-amber-200/70">'+avOf(u.av)[1]+'</div><div class="text-xs mt-1 text-amber-400 font-bold">'+r[2]+' '+r[1]+'</div><div class="text-xs">'+fmt(g)+' 🌾 '+(u.pin?'🔒':'')+'</div></button>'}).join('')+'</div>':'')+'<button class="btn b-green w-full text-lg py-4" onclick="profForm(\'new\')">➕ צור נמלה חדשה</button><p class="text-xs text-center text-amber-200/50 mt-4">כל פרופיל שומר בנפרד משקל, ארוחות, מים, צעדים, אימונים, גרגרים והיסטוריה. מפתח Gemini משותף לכל הפרופילים במכשיר.</p>'}
+function pickU(id){const u=G.users.find(x=>x.id===id);if(!u)return;if(!u.pin){login(id);setTimeout(()=>toast('🔐 מומלץ להגדיר קוד PIN בעריכת הפרופיל'),2400);return}showLogin(id)}
+function pinKey(n){if(PIN.length>=4)return;PIN+=n;drawLogin();if(PIN.length===4)setTimeout(pinCheck,150)}
+function pinDel(){PIN=PIN.slice(0,-1);drawLogin()}
+function pinCheck(){const u=G.users.find(x=>x.id===PU);if(!u)return;if(u.pin===pinH(u.id,PIN)){login(u.id);return}PIN='';drawLogin();const d=$('pinDots');if(d)d.classList.add('shake');if(navigator.vibrate)navigator.vibrate(200);toast('❌ קוד שגוי, נסה שוב')}
+document.addEventListener('keydown',e=>{if($('login').classList.contains('hidden')||!PU||$('sheet').classList.contains('open'))return;if(/^\d$/.test(e.key))pinKey(+e.key);else if(e.key==='Backspace')pinDel();else if(e.key==='Escape')showLogin()});
+function login(id){G.cur=id;ld();saveG();PU='';PIN='';$('login').classList.add('hidden');afterLoad();go('home');if(G.nm!=='off'&&'Notification' in window&&Notification.permission==='granted')startNotif();toast('שלום '+(curU().name||'')+' '+avOf(curU().av)[0]);if(!S.pf)setTimeout(()=>profForm('edit'),400)}
+function lock(to){save();clearInterval(nt);G.cur='';S=null;saveG();showLogin(to)}
+function acctSheet(){const u=curU(),others=G.users.filter(x=>x.id!==G.cur);sheet('<div class="text-center mb-4"><div class="text-6xl">'+avH(u.av)+'</div><div class="text-xl font-black mt-1">'+esc(u.name||'')+'</div><div class="text-sm text-amber-200/70">'+avOf(u.av)[1]+' · '+R[rankOf(S.grains)][1]+'</div></div><div class="space-y-3"><button class="btn b-amber w-full" onclick="lock()">🔒 נעל סשן</button><button class="btn b-green w-full" onclick="profForm(\'new\')">➕ צור נמלה חדשה</button><button class="btn b-stone w-full" onclick="profForm(\'edit\')">✏️ ערוך פרופיל</button></div>'+(others.length?'<div class="font-bold mt-5 mb-2">🔄 החלף פרופיל</div><div class="grid grid-cols-2 gap-2">'+others.map(o=>'<button class="btn b-stone !p-2" onclick="lock(\''+o.id+'\')">'+avOf(o.av)[0]+' '+esc(o.name)+'</button>').join('')+'</div>':''))}
+function afterLoad(){DR={};DT={};ER={};HS='';HN=14;$('wCur').value='';$('wGoal').value='';drawChat.err='';render();drawChat()}
+let OB={sex:'m',act:0,av:0,mode:'new'};
+function profForm(mode){
+  const ed=mode==='edit'&&G.cur&&S,p=ed?(S.pf||{}):{},u=ed?curU():{};
+  OB={sex:p.sex||'m',act:p.act||0,av:ed?(+u.av||0):0,mode:ed?'edit':'new'};
+  const wv=ed?(S.w.cur||''):'',gv=ed?(S.w.goal||''):'';
+  sheet('<h3 class="text-xl font-black mb-1">'+(ed?'✏️ עריכת פרופיל':'🐜 נמלה חדשה בממלכה')+'</h3><p class="text-sm text-amber-200/70 mb-3">כדי שהמים, הקלוריות והאימונים יתאימו בדיוק אליך</p><label class="text-sm">שם / כינוי</label><input type="text" id="oN" value="'+esc(p.name||u.name||'')+'" class="mb-2" maxlength="20"><label class="text-sm">קוד PIN (4 ספרות)'+(ed?' – השאר ריק כדי לא לשנות':'')+'</label><input type="password" id="oP" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" class="mb-3 ltr text-center tracking-[.5em]"><label class="text-sm">בחר אווטאר נמלה</label><div id="oV" class="grid grid-cols-4 gap-2 mb-1"></div><div id="oVn" class="text-center font-black text-amber-400 mb-3"></div><div class="grid grid-cols-2 gap-2 mb-2"><div><label class="text-sm">משקל נוכחי (ק״ג)</label><input type="number" id="oW" step="0.1" inputmode="decimal" value="'+wv+'"></div><div><label class="text-sm">יעד מים (כוסות ביום)</label><input type="number" id="oWg" inputmode="numeric" placeholder="למשל 10" value="'+(p.wg||'')+'"></div><div class="col-span-2"><label class="text-sm">יעד צעדים יומי</label><input type="number" id="oSg" inputmode="numeric" placeholder="10000" value="'+(p.sg||10000)+'"></div></div><details class="mb-4 rounded-xl border-2 border-amber-900 p-2"'+(ed?' open':'')+'><summary class="font-bold cursor-pointer">📐 פרטים נוספים לחישוב יעד קלורי (מומלץ)</summary><div class="mt-2"><label class="text-sm">מין</label><div class="grid grid-cols-2 gap-2 mb-2" id="oS"></div><div class="grid grid-cols-3 gap-2 mb-2"><div><label class="text-sm">גיל</label><input type="number" id="oA" inputmode="numeric" value="'+(p.age||'')+'"></div><div><label class="text-sm">גובה (ס״מ)</label><input type="number" id="oH" inputmode="numeric" value="'+(p.h||'')+'"></div><div><label class="text-sm">משקל יעד</label><input type="number" id="oG" step="0.1" inputmode="decimal" value="'+gv+'"></div></div><label class="text-sm">רמת פעילות נוכחית</label><div class="grid grid-cols-3 gap-2" id="oC"></div></div></details><button class="btn b-green w-full" onclick="obSave()">'+(ed?'שמור שינויים ✔':'צור נמלה והתחל 🐜')+'</button>');obDraw()}
+function obDraw(){$('oV').innerHTML=AV.map((a,i)=>'<button type="button" class="avb'+(OB.av===i?' on':'')+'" onclick="OB.av='+i+';obDraw()" aria-label="'+a[1]+'"><div class="text-3xl">'+avH(i)+'</div><div class="text-[.6rem] leading-tight mt-1">'+a[1].replace('נמלת ','')+'</div></button>').join('');$('oVn').textContent=avOf(OB.av)[0]+' '+avOf(OB.av)[1];$('oS').innerHTML=[['m','זכר'],['f','נקבה']].map(x=>'<button type="button" class="btn '+(OB.sex===x[0]?'b-amber':'b-stone')+' !p-2" onclick="OB.sex=\''+x[0]+'\';obDraw()">'+x[1]+'</button>').join('');$('oC').innerHTML=ACT.map((a,i)=>'<button type="button" class="btn '+(OB.act===i?'b-amber':'b-stone')+' !p-2 text-xs" onclick="OB.act='+i+';obDraw()">'+a+'</button>').join('')}
+function obSave(){
+  const n=$('oN').value.trim(),pin=$('oP').value.trim(),w=+$('oW').value,wg=Math.round(+$('oWg').value||0),sg=Math.round(+$('oSg').value||0),a=+$('oA').value||0,h=+$('oH').value||0,g=+$('oG').value||0,ed=OB.mode==='edit';
+  if(!n){toast('הזן שם / כינוי');return}
+  if((!ed||pin)&&!/^\d{4}$/.test(pin)){toast('קוד PIN חייב להיות 4 ספרות');return}
+  if(!(w>=30&&w<=300)){toast('הזן משקל נוכחי תקין (30–300 ק״ג)');return}
+  if(!(wg>=4&&wg<=20)){toast('יעד מים: בין 4 ל-20 כוסות');return}
+  if(!(sg>=1000&&sg<=50000)){toast('יעד צעדים: בין 1,000 ל-50,000');return}
+  if((a&&!(a>=10&&a<=100))||(h&&!(h>=100&&h<=230))||(g&&!(g>=30&&g<=300))){toast('בדוק את הגיל, הגובה ומשקל היעד');return}
+  if(!ed){if(G.cur&&S)save();clearInterval(nt);const id='u'+Date.now();G.users.push({id,name:n,av:OB.av,pin:pinH(id,pin)});G.cur=id;ld();$('login').classList.add('hidden')}
+  const u=curU();u.name=n;u.av=OB.av;if(pin)u.pin=pinH(u.id,pin);
+  S.pf={name:n,sex:OB.sex,age:a||(S.pf||{}).age||0,h:h||(S.pf||{}).h||0,act:OB.act,wg,sg};
+  if(!S.w.start)S.w.start=w;S.w.cur=w;S.w.goal=g||S.w.goal||w;const d=day(),l=S.w.log.find(x=>x.d===d);if(l)l.w=w;else S.w.log.push({d,w});
+  EX.forEach(e=>{if(!S.prog[e[0]]){let lv=OB.act;if(e[0]==='pu'&&OB.sex==='f')lv=Math.min(lv,1);S.prog[e[0]]={lv:Math.min(lv,e[3].length-1),c:0}}});
+  save();afterLoad();if(!ed){go('home');if(G.nm!=='off'&&'Notification' in window&&Notification.permission==='granted')startNotif()}
+  if(ed){closeSheet();toast('הפרופיל עודכן ✔');return}
+  const q=plan(),loss=S.w.goal<w;sheet('<div class="text-center"><div class="text-6xl mb-2">'+avH(OB.av)+'</div><h3 class="text-xl font-black mb-1">שלום '+esc(n)+'! התוכנית שלך מוכנה</h3><div class="text-sm text-amber-200/70 mb-3">'+avOf(OB.av)[1]+' הצטרפה לממלכה 🎉</div></div><ul class="space-y-2 mb-4"><li>💧 מים: <b>'+wg+' כוסות</b> (~'+(wg*0.25).toFixed(1)+' ליטר) ביום</li><li>👟 צעדים: <b>'+fmt(sg)+'</b> ביום</li>'+(q.cal?'<li>🔥 יעד קלורי: <b>~'+q.cal+' קל׳</b> ביום ('+(loss?'גירעון בטוח לירידה הדרגתית':'שמירה על המשקל')+')</li>':'<li>🔥 להשלמת יעד קלורי – מלא גיל וגובה בעריכת הפרופיל</li>')+'<li>🏋️ רמת פתיחה: <b>'+ACT[OB.act]+'</b> – התרגילים הותאמו אליה</li><li>🔐 הפרופיל נעול בקוד ה-PIN שלך</li></ul><button class="btn b-amber w-full" onclick="closeSheet();go(\'work\')">יאללה לאימון 🐜</button>')}
+function init(){
+  try{Object.assign(G,JSON.parse(localStorage.getItem('antfit_g'))||{})}catch(e){}
+  if(!Array.isArray(G.users))G.users=[];
+  if(!G.users.length){let o=null;try{o=JSON.parse(localStorage.getItem(K))}catch(e){}if(o){G.users=[{id:'u1',name:(o.pf&&o.pf.name)||'אני',av:0}];if(o.key&&!G.key)G.key=o.key;delete o.key;try{localStorage.setItem('antfit_u_u1',JSON.stringify(o))}catch(e){}}G.cur=''}
+  G.users.forEach(u=>{if(u.av==null)u.av=0});
+  if(G.cur&&!G.users.find(u=>u.id===G.cur))G.cur='';
+  saveG();
+  if(G.cur){ld();go('home');render();if(G.nm!=='off'&&'Notification' in window&&Notification.permission==='granted')startNotif();if(!S.pf)setTimeout(()=>profForm('edit'),400)}
+  else showLogin();
+}
 init();
-go('home');render();if(!S.pf)setTimeout(onboard,400);
 </script>
 </body>
 </html>
