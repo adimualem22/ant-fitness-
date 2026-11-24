@@ -528,13 +528,13 @@ async function calcJ(){
 const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת Google',503:'השרת של Google עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה ל-Gemini נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='',GMt=0,GRT=0;
-const VER='6.3',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=35000,GWAIT=2500,GRETRY=2,GNT=' (מנסה להתחבר לשרת)';
+const VER='6.4',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=35000,GBACK=[5000,10000,20000],GNT=' (מנסה להתחבר לשרת)';
 /* מציג/מסתיר את "(מנסה להתחבר לשרת)" בכל חיווי טעינה פעיל (יועץ, ניתוח ארוחה, ניתוח תמונה) */
 function gNote(on){GRT=on?1:0;document.querySelectorAll('.gnote').forEach(e=>{e.textContent=GRT?GNT:''})}
 const gn=()=>'<span class="gnote">'+(GRT?GNT:'')+'</span>';
 /* שני מודלים מותרים למפתח הזה: ראשי gemini-3.8-flash וגיבוי gemini-3.5-flash-lite.
-   35 שניות לכל ניסיון. על 503 או timeout מחכים 2.5 שניות ומנסים שוב את אותו מודל עד פעמיים (3 ניסיונות בסך הכל) לפני מעבר לגיבוי.
-   על 429 – ניסיון חוזר אחד. כל זמן שמנסים שוב, חיווי הטעינה מציג "מנסה להתחבר לשרת". */
+   35 שניות לכל ניסיון. המתנה גדלה בין ניסיונות חוזרים (5, 10, 20 שניות) כדי לעבור גלי עומס: על 503 עד 3 ניסיונות חוזרים (4 בסך הכל),
+   על timeout עד 2 (3 בסך הכל), על 429 אחד – ורק אחר כך מעבר לגיבוי. כל זמן שמנסים שוב, חיווי הטעינה מציג "מנסה להתחבר לשרת". */
 async function callG(body){
   const key=(G.key||'').trim();let ms=GMS.slice();
   if(GM&&Date.now()-GMt<6e5&&ms.includes(GM))ms=[GM].concat(ms.filter(x=>x!==GM));
@@ -550,7 +550,7 @@ async function callG(body){
         let j=null;if(r){try{j=JSON.parse(raw)}catch(e){}}
         if(r&&r.ok&&j){GM=m;GMt=Date.now();return j}
         st=to?408:r.status;
-        if((to||st===503||st===429)&&tries<(st===429?1:GRETRY)){tries++;gNote(1);await new Promise(z=>setTimeout(z,GWAIT));continue}
+        if(tries<(to?2:st===503?3:st===429?1:0)){const w=GBACK[Math.min(tries,GBACK.length-1)];tries++;gNote(1);await new Promise(z=>setTimeout(z,w));continue}
         const nt=tries?' – '+(tries+1)+' ניסיונות':'';
         if(to)errs.push(m+' → timeout ('+GTO/1000+' שניות'+nt+')');
         else errs.push(m+' → HTTP '+st+nt+': '+((j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה').slice(0,160));
@@ -573,18 +573,26 @@ function drawChPrev(){const p=$('chPrev');p.classList.toggle('hidden',!CI);p.inn
 $('fChat').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{CI={b64:await toB64(f),th:'data:image/jpeg;base64,'+await toB64(f,240,.6)};drawChPrev();$('chIn').focus()}catch(x){toast('לא הצלחתי לקרוא את התמונה')}};
 function drawChat(){
   const m=S.chat.map(x=>'<div class="flex '+(x.r==='user'?'justify-start':'justify-end')+'"><div class="bub '+(x.r==='user'?'u':'m')+'">'+(x.th?'<img src="'+x.th+'" alt="תמונה שצורפה">':'')+esc(x.t)+'</div></div>').join('');
-  $('msgs').innerHTML=(m||'<div class="text-slate-400 text-sm text-center py-8">שאל אותי כל דילמת אוכל או שתייה 🥗<br>אפשר גם לצלם תפריט, תווית תזונתית, מנה או מכשיר כושר</div>')+(drawChat.busy?'<div class="flex justify-end"><div class="bub m flex items-center gap-2">'+renderAntAvatar(9,26)+'<span>היועץ חושב...'+gn()+'</span></div></div>':'')+(drawChat.err?'<div class="flex justify-end"><div class="bub" style="background:#FEE2E2;color:#DC2626;unicode-bidi:plaintext;font-size:.8rem;word-break:break-word">'+esc(drawChat.err)+'</div></div>':'');
+  $('msgs').innerHTML=(m||'<div class="text-slate-400 text-sm text-center py-8">שאל אותי כל דילמת אוכל או שתייה 🥗<br>אפשר גם לצלם תפריט, תווית תזונתית, מנה או מכשיר כושר</div>')+(drawChat.busy?'<div class="flex justify-end"><div class="bub m flex items-center gap-2">'+renderAntAvatar(9,26)+'<span>היועץ חושב...'+gn()+'</span></div></div>':'')+(drawChat.err?'<div class="flex justify-end"><div class="bub" style="background:#FEE2E2;color:#DC2626;unicode-bidi:plaintext;font-size:.8rem;word-break:break-word">'+esc(drawChat.err)+'<div class="mt-2"><button class="btn b-amber text-sm" onclick="chatRetry()">'+ic('refresh')+'נסה שוב</button></div></div></div>':'');
   $('msgs').scrollTop=1e6}
 const chTrim=()=>{S.chat=S.chat.slice(-10);while(S.chat[0]&&S.chat[0].r!=='user')S.chat.shift()};
 async function send(t){
   t=(t||'').trim();const img=CI;if((!t&&!img)||drawChat.busy||!needKey())return;
   if(!t)t='מה רואים בתמונה, ומה דעתך עליה ביחס ליעדים ולארוחות שלי היום?';
-  $('chIn').value='';chGrow();CI=null;drawChPrev();const msg={r:'user',t};if(img)msg.th=img.th;S.chat.push(msg);chTrim();save();drawChat.busy=1;drawChat.err='';drawChat();
+  $('chIn').value='';chGrow();CI=null;drawChPrev();const msg={r:'user',t};if(img)msg.th=img.th;S.chat.push(msg);chTrim();save();
+  return askCoach(img)}
+/* שולח ליועץ את השיחה כפי שהיא (ההודעה האחרונה של המשתמש כבר בפנים) – משמש גם לשליחה וגם ל"נסה שוב" בלי להקליד מחדש */
+async function askCoach(img){
+  drawChat.lastImg=img||null;drawChat.busy=1;drawChat.err='';drawChat();
   try{const last=S.chat.length-1,r=await callG({systemInstruction:{parts:[{text:SYS+ctxTxt()+(img?'\nהמשתמש צירף תמונה להודעה האחרונה (למשל תפריט במסעדה, תווית תזונתית בסופר, מנה או ציוד כושר). פתח בתיאור קצר של מה שזיהית בתמונה, וענה ספציפית עליה ביחס ליעדים שלו, לקלוריות שנותרו לו ולמה שכבר אכל היום. אם התמונה לא ברורה – אמור זאת ובקש צילום נוסף.':'')}]},contents:S.chat.map((x,i)=>({role:x.r,parts:[{text:x.t+(x.th&&!(img&&i===last)?' [להודעה זו צורפה תמונה]':'')}].concat(img&&i===last?[{inline_data:{mime_type:'image/jpeg',data:img.b64}}]:[])}))});
     S.chat.push({r:'model',t:r.candidates[0].content.parts[0].text.replace(/\*\*/g,'').replace(/^\* /gm,'• ')});chTrim();save()}
   catch(e){drawChat.err=(e&&e.message)||'שגיאת רשת'}
   drawChat.busy=0;drawChat()}
-function chatReset(){S.chat=[];save();drawChat()}
+function chatRetry(){if(drawChat.busy||!needKey())return;const l=S.chat[S.chat.length-1];
+  if(!l||l.r!=='user'){drawChat.err='';drawChat();return}
+  if(l.th&&!drawChat.lastImg){toast('התמונה המקורית לא נשמרה – צרף אותה שוב');return}
+  askCoach(drawChat.lastImg)}
+function chatReset(){S.chat=[];drawChat.err='';drawChat.lastImg=null;save();drawChat()}
 
 /* משקל */
 function saveW(){
@@ -973,7 +981,7 @@ document.addEventListener('keydown',e=>{if($('login').classList.contains('hidden
 function login(id){AD='';G.cur=id;ld();saveG();PU='';PIN='';$('login').classList.add('hidden');afterLoad();go('home');if(G.nm!=='off'&&'Notification' in window&&Notification.permission==='granted')startNotif();toast('שלום '+(curU().name||'')+' '+avOf(curU().av)[0]);if(!S.pf)setTimeout(()=>profForm('edit'),400);setTimeout(auditPen,900)}
 function lock(to){AD='';save();clearInterval(nt);G.cur='';S=null;saveG();showLogin(to)}
 function acctSheet(){const u=curU(),others=G.users.filter(x=>x.id!==G.cur);sheet('<div class="text-center mb-4"><div class="text-6xl">'+avH(u.av)+'</div><div class="text-xl font-black mt-1">'+esc(u.name||'')+'</div><div class="text-sm text-slate-500">'+avOf(u.av)[1]+' · '+R[rankOf(S.grains)][1]+'</div></div><div class="space-y-3"><button class="btn b-amber w-full" onclick="lock()">'+ic('lock')+'נעל סשן</button><button class="btn b-green w-full" onclick="profForm(\'new\')">'+ic('plus')+'צור נמלה חדשה</button><button class="btn b-stone w-full" onclick="profForm(\'edit\')">'+ic('pencil')+'ערוך פרופיל</button><button class="btn b-stone w-full" onclick="avSheet()">'+ic('user')+'החלף אווטאר</button></div>'+(others.length?'<div class="font-bold mt-5 mb-2">'+ic('users')+'החלף פרופיל</div><div class="grid grid-cols-2 gap-2">'+others.map(o=>'<button class="btn b-stone !p-2" onclick="lock(\''+o.id+'\')">'+renderAntAvatar(o.av,30)+esc(o.name)+'</button>').join('')+'</div>':''))}
-function afterLoad(){DR={};DT={};ER={};HS='';HN=14;$('wCur').value='';$('wGoal').value='';drawChat.err='';render();drawChat()}
+function afterLoad(){DR={};DT={};ER={};HS='';HN=14;$('wCur').value='';$('wGoal').value='';drawChat.err='';drawChat.lastImg=null;render();drawChat()}
 let OB={sex:'m',act:0,av:0,mode:'new'};
 function profForm(mode){
   const ed=mode==='edit'&&G.cur&&S,p=ed?(S.pf||{}):{},u=ed?curU():{};
