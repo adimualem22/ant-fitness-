@@ -528,7 +528,7 @@ async function calcJ(){
 const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת Google',503:'השרת של Google עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה ל-Gemini נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='',GMt=0,GRT=0;
-const VER='6.4',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=35000,GBACK=[5000,10000,20000],GNT=' (מנסה להתחבר לשרת)';
+const VER='6.5',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=35000,GBACK=[5000,10000,20000],GNT=' (מנסה להתחבר לשרת)';
 /* מציג/מסתיר את "(מנסה להתחבר לשרת)" בכל חיווי טעינה פעיל (יועץ, ניתוח ארוחה, ניתוח תמונה) */
 function gNote(on){GRT=on?1:0;document.querySelectorAll('.gnote').forEach(e=>{e.textContent=GRT?GNT:''})}
 const gn=()=>'<span class="gnote">'+(GRT?GNT:'')+'</span>';
@@ -543,10 +543,14 @@ async function callG(body){
     for(const m of ms){
       const url=GAPI+'/'+m+':generateContent?key='+encodeURIComponent(key);let tries=0,st=0;
       for(;;){
-        let r=null,raw='',to=false;
+        let r=null,raw='',to=false,ne=null;
         const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),GTO);
         try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
-        catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')to=true;else throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
+        catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')to=true;else ne=e||new Error('network')}
+        if(ne){/* אין תשובת HTTP בכלל: אין אינטרנט, החיבור נותק (למשל מעבר בין אפליקציות באמצע בקשה) או חסימה. אם יש חיבור – מנסים שוב עד פעמיים */
+          if(navigator.onLine===false)throw new Error('אין חיבור לאינטרנט – בדוק Wi-Fi או נתונים סלולריים ונסה שוב');
+          if(tries<2){const w=GBACK[Math.min(tries,GBACK.length-1)];tries++;gNote(1);await new Promise(z=>setTimeout(z,w));continue}
+          throw new Error('שגיאת רשת – לא הצלחתי להגיע לשרת של Google ('+(tries+1)+' ניסיונות). בדוק את החיבור לאינטרנט, או סינון / VPN שחוסם את generativelanguage.googleapis.com, ונסה שוב. פרטים: '+((ne&&ne.message)||ne))}
         let j=null;if(r){try{j=JSON.parse(raw)}catch(e){}}
         if(r&&r.ok&&j){GM=m;GMt=Date.now();return j}
         st=to?408:r.status;
