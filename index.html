@@ -518,7 +518,7 @@ async function est(f){
   const h=TBL.find(t=>f.includes(t[0].replace('׳',"'"))||f.includes(t[0]));return h?h[1]:300}
 async function calcJ(){
   const f=$('jf').value.trim();if(!f)return;
-  sheet('<div class="text-center py-8"><div class="text-5xl animate-bounce">'+renderAntAvatar(curU().av||0)+'</div><p class="mt-3 font-bold">מחשב קלוריות...</p></div>');
+  sheet('<div class="text-center py-8"><div class="text-5xl animate-bounce">'+renderAntAvatar(curU().av||0)+'</div><p class="mt-3 font-bold">מחשב קלוריות...'+gn()+'</p></div>');
   const k=await est(f),fw=(S.w.cur||75)/75,r=Math.min(6,Math.ceil(k/(40*fw))),wm=Math.min(60,Math.max(0,Math.round((k-r*40*fw)/(5*fw))));
   hpush({t:Date.now(),x:'נשברתי: '+f,g:0});save();render();
   sheet('<div class="text-center"><div class="text-4xl font-black text-amber-600">~'+k+' 🔥</div><div class="mb-3">קלוריות</div></div><h3 class="font-black mb-2">🏠 תוכנית פיצוי ביתית (ללא ציוד)</h3><ul class="list-disc pr-5 space-y-1 mb-4"><li><b>'+r+' סבבים</b> של: 15 סקוואטים, 10 שכיבות סמיכה (על ברכיים אם קשה), פלאנק 30 שניות, 12 גשר ישבן, 8 מכרעים לכל רגל</li>'+(wm?'<li>הליכה מהירה <b>'+wm+' דקות</b></li>':'')+'<li>כוס מים גדולה אחרי כל סבב</li></ul><button class="btn b-green w-full" onclick="add(40,\'ביצעתי פיצוי אחרי ג׳אנק 💪\');closeSheet()">ביצעתי! (+40 🌾)</button>');
@@ -527,27 +527,38 @@ async function calcJ(){
 /* Gemini */
 const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת Google',503:'השרת של Google עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה ל-Gemini נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
-let GM='',GMt=0;
-const VER='6.2',GMS=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'],GAPI='https://generativelanguage.googleapis.com/v1beta/models';
-/* שלושה מודלים יציבים בלבד: ראשי ושני גיבויים. 15 שניות לכל ניסיון; על 503 או 429 מחכים 1.5 שניות ומנסים שוב פעם אחת את אותו מודל, ורק אז עוברים למודל הבא */
+let GM='',GMt=0,GRT=0;
+const VER='6.3',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=35000,GWAIT=2500,GRETRY=2,GNT=' (מנסה להתחבר לשרת)';
+/* מציג/מסתיר את "(מנסה להתחבר לשרת)" בכל חיווי טעינה פעיל (יועץ, ניתוח ארוחה, ניתוח תמונה) */
+function gNote(on){GRT=on?1:0;document.querySelectorAll('.gnote').forEach(e=>{e.textContent=GRT?GNT:''})}
+const gn=()=>'<span class="gnote">'+(GRT?GNT:'')+'</span>';
+/* שני מודלים מותרים למפתח הזה: ראשי gemini-3.8-flash וגיבוי gemini-3.5-flash-lite.
+   35 שניות לכל ניסיון. על 503 או timeout מחכים 2.5 שניות ומנסים שוב את אותו מודל עד פעמיים (3 ניסיונות בסך הכל) לפני מעבר לגיבוי.
+   על 429 – ניסיון חוזר אחד. כל זמן שמנסים שוב, חיווי הטעינה מציג "מנסה להתחבר לשרת". */
 async function callG(body){
   const key=(G.key||'').trim();let ms=GMS.slice();
   if(GM&&Date.now()-GMt<6e5&&ms.includes(GM))ms=[GM].concat(ms.filter(x=>x!==GM));
-  const errs=[],rt={};let last=0;
-  for(let k=0;k<ms.length;k++){const m=ms[k];
-    const url=GAPI+'/'+m+':generateContent?key='+encodeURIComponent(key);
-    let r,raw;
-    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
-    catch(e){clearTimeout(tm);if(e&&e.name==='AbortError'){errs.push(m+' → timeout (15 שניות)');last=408;continue}throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
-    let j=null;try{j=JSON.parse(raw)}catch(e){}
-    if(r.ok&&j){GM=m;GMt=Date.now();return j}
-    if((r.status===503||r.status===429)&&!rt[m]){rt[m]=1;await new Promise(z=>setTimeout(z,1500));k--;continue}
-    const msg=(j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה';
-    errs.push(m+' → HTTP '+r.status+': '+msg.slice(0,160));last=r.status;
-    if(r.status===404&&GM===m)GM='';
-    if(![404,408,429,500,502,503,504].includes(r.status))break;
-  }
-  throw new Error(FR(last)+' — '+errs.join(' | '))}
+  const errs=[];let last=0;
+  try{
+    for(const m of ms){
+      const url=GAPI+'/'+m+':generateContent?key='+encodeURIComponent(key);let tries=0,st=0;
+      for(;;){
+        let r=null,raw='',to=false;
+        const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),GTO);
+        try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
+        catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')to=true;else throw new Error('שגיאת רשת (fetch): '+((e&&e.message)||e)+' – ייתכן שהסביבה חוסמת פניות ל-generativelanguage.googleapis.com')}
+        let j=null;if(r){try{j=JSON.parse(raw)}catch(e){}}
+        if(r&&r.ok&&j){GM=m;GMt=Date.now();return j}
+        st=to?408:r.status;
+        if((to||st===503||st===429)&&tries<(st===429?1:GRETRY)){tries++;gNote(1);await new Promise(z=>setTimeout(z,GWAIT));continue}
+        const nt=tries?' – '+(tries+1)+' ניסיונות':'';
+        if(to)errs.push(m+' → timeout ('+GTO/1000+' שניות'+nt+')');
+        else errs.push(m+' → HTTP '+st+nt+': '+((j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה').slice(0,160));
+        last=st;if(st===404&&GM===m)GM='';
+        break}
+      if(![404,408,429,500,502,503,504].includes(st))break}
+    throw new Error(FR(last)+' — '+errs.join(' | '))
+  }finally{gNote(0)}}
 function openSettings(){
   sheet('<h3 class="text-xl font-black mb-2 ttl">'+ic('settings')+'הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();GM=\'\';save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-slate-400 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+(GM||GMS[0])+' (אוטומטי)</div>');
 }
@@ -562,7 +573,7 @@ function drawChPrev(){const p=$('chPrev');p.classList.toggle('hidden',!CI);p.inn
 $('fChat').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{CI={b64:await toB64(f),th:'data:image/jpeg;base64,'+await toB64(f,240,.6)};drawChPrev();$('chIn').focus()}catch(x){toast('לא הצלחתי לקרוא את התמונה')}};
 function drawChat(){
   const m=S.chat.map(x=>'<div class="flex '+(x.r==='user'?'justify-start':'justify-end')+'"><div class="bub '+(x.r==='user'?'u':'m')+'">'+(x.th?'<img src="'+x.th+'" alt="תמונה שצורפה">':'')+esc(x.t)+'</div></div>').join('');
-  $('msgs').innerHTML=(m||'<div class="text-slate-400 text-sm text-center py-8">שאל אותי כל דילמת אוכל או שתייה 🥗<br>אפשר גם לצלם תפריט, תווית תזונתית, מנה או מכשיר כושר</div>')+(drawChat.busy?'<div class="flex justify-end"><div class="bub m flex items-center gap-2">'+renderAntAvatar(9,26)+'חושב...</div></div>':'')+(drawChat.err?'<div class="flex justify-end"><div class="bub" style="background:#FEE2E2;color:#DC2626;unicode-bidi:plaintext;font-size:.8rem;word-break:break-word">'+esc(drawChat.err)+'</div></div>':'');
+  $('msgs').innerHTML=(m||'<div class="text-slate-400 text-sm text-center py-8">שאל אותי כל דילמת אוכל או שתייה 🥗<br>אפשר גם לצלם תפריט, תווית תזונתית, מנה או מכשיר כושר</div>')+(drawChat.busy?'<div class="flex justify-end"><div class="bub m flex items-center gap-2">'+renderAntAvatar(9,26)+'<span>היועץ חושב...'+gn()+'</span></div></div>':'')+(drawChat.err?'<div class="flex justify-end"><div class="bub" style="background:#FEE2E2;color:#DC2626;unicode-bidi:plaintext;font-size:.8rem;word-break:break-word">'+esc(drawChat.err)+'</div></div>':'');
   $('msgs').scrollTop=1e6}
 const chTrim=()=>{S.chat=S.chat.slice(-10);while(S.chat[0]&&S.chat[0].r!=='user')S.chat.shift()};
 async function send(t){
@@ -597,7 +608,7 @@ async function gem(file,prompt){
   return JSON.parse(j.candidates[0].content.parts[0].text.replace(/```json|```/g,''))}
 async function analyze(file,kind){
   if(!file)return;
-  sheet('<div class="text-center py-8"><div class="text-5xl animate-bounce">'+renderAntAvatar(curU().av||0)+'</div><p class="mt-3 font-bold">הנמלה בוחנת את התמונה...</p></div>');
+  sheet('<div class="text-center py-8"><div class="text-5xl animate-bounce">'+renderAntAvatar(curU().av||0)+'</div><p class="mt-3 font-bold">הנמלה בוחנת את התמונה...'+gn()+'</p></div>');
   try{
     const L=a=>(Array.isArray(a)?a:[]).map(x=>'<li>'+esc(x)+'</li>').join('');
     if(kind==='plate'){
@@ -639,7 +650,7 @@ const nn=v=>Math.round(+v||0);
 function entHTML(e,id,i,d){const A=e.a,at=e.at||new Date(e.ts).toTimeString().slice(0,5),c=e.jk?'border-red-300':{good:'border-emerald-300',ok:'border-amber-600',heavy:'border-orange-500'}[A.verdict]||'border-slate-200',M=(ic,v,l)=>'<div class="rounded-lg bg-slate-100 p-1">'+ic+'<br><b>'+nn(v)+'</b><br>'+l+'</div>';return '<div class="rounded-2xl border '+c+' bg-slate-50 p-3 mb-3"><div class="flex items-start gap-2"><input type="time" class="tmi" value="'+at+'" onchange="editAt(\''+id+'\','+i+',this.value)"><div class="font-bold flex-1">- '+(e.img?'📷 ':'')+esc(e.t||'(לפי התמונה)')+'</div><button class="xb" onclick="delMeal(\''+id+'\','+i+',\''+d+'\')" aria-label="'+(e.cof?'מחק כוס קפה':'מחק ארוחה')+'">'+ic('trash')+'</button></div>'+(e.jk?'<div class="mt-1"><span class="rbadge"><span dir="ltr">-30</span> 🌾 חריגה תזונתית</span></div>':'')+'<div class="text-xs text-slate-400 mt-1">📅 '+d.split('-').reverse().join('.')+' · ניתן לערוך את השעה</div><div class="grid grid-cols-4 gap-1 text-center text-xs my-2">'+M('🔥',A.kcal,'קל׳')+M('🍬',A.sugar,'סוכר ג׳')+M('🧈',A.fat,'שומן ג׳')+M('💪',A.protein,'חלבון ג׳')+'</div>'+(A.feedback?'<p class="text-sm">'+esc(A.feedback)+'</p>':'')+(A.swap?'<p class="text-sm mt-1">💡 <b>עדיף:</b> '+esc(A.swap)+'</p>':'')+(A.offset?'<p class="text-sm mt-1">🏋️ <b>קיזוז ביתי:</b> '+esc(A.offset)+'</p>':'')+(A.verdict==='good'&&!e.jk?'<div class="text-emerald-600 font-black text-sm mt-1">🌾 +30 גרגרים – ארוחה מעולה!</div>':'')+'</div>'}
 function editAt(id,i,v){const d=aday(),l=(S.fd[d]||{})[id],e=l&&l[i];if(!e||!/^\d{2}:\d{2}$/.test(v))return;snap('שעת ארוחה');e.at=v;save();render()}
 function drawFood(){const d=aday(),dw=dWord(d),f=S.fd[d]||{},tot=Object.values(f).flat().reduce((s,e)=>s+((e.a&&+e.a.kcal)||0),0),q=plan(),tc=calTarget();
-  $('foodLog').innerHTML='<div class="card !p-3 text-center mb-3"><div class="text-sm">סה״כ קלוריות מנותחות '+dw+'</div><div class="text-3xl font-black text-amber-600">'+nn(tot)+' <span class="text-base text-slate-500">/ '+(q.cal?'~':'')+fmt(tc)+'</span></div><div class="pbar mt-2"><div class="h-full '+(tot>tc?'bg-red-500':'bg-emerald-500')+'" style="width:'+Math.min(100,Math.round(tot/tc*100))+'%"></div></div>'+(q.cal?'':'<div class="text-xs text-slate-400 mt-1">יעד ברירת מחדל – מלא גיל וגובה בפרופיל להתאמה אישית</div>')+(tot>tc?'<div class="rounded-xl p-2 mt-2 text-sm font-bold" style="background:#FEF2F2;color:#DC2626">חרגת ב-'+fmt(tot-tc)+' קל׳ מהיעד'+(penCalc(d).cal?' · <span dir="ltr">-'+penCalc(d).cal+'</span> 🌾':'')+'</div>':'')+'</div>'+Object.keys(MN).map(id=>'<div class="card mb-3"><div class="font-black text-lg mb-2">'+MN[id][0]+' '+MN[id][1]+'</div>'+(f[id]||[]).map((e,i)=>entHTML(e,id,i,d)).join('')+(FB[id]?'<div class="text-center py-3"><span class="text-3xl animate-bounce inline-block">'+renderAntAvatar(curU().av||0)+'</span><div class="text-sm">מנתח את הארוחה...</div></div>':'')+(ER[id]?'<div class="text-red-500 text-sm mb-2">'+esc(ER[id])+'</div>':'')+'<textarea id="fi_'+id+'" rows="6" placeholder="מה אכלת או שתית? אפשר לפרט כמה שרוצים (מרכיבים, כמויות, רטבים...)" oninput="DR[\''+id+'\']=this.value" class="mb-2">'+esc(DR[id]||'')+'</textarea><div class="flex items-center gap-2 mb-2"><label class="text-sm">🕒 שעת אכילה:</label><input type="time" id="ft_'+id+'" class="tmi" value="'+(DT[id]||nowHM())+'" onchange="DT[\''+id+'\']=this.value"></div><div class="grid grid-cols-3 gap-2"><button class="btn b-green col-span-2 !p-2 text-sm" onclick="anaMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>שלח לניתוח 🧠</button><button class="btn b-amber !p-2 text-sm" onclick="pickMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>📷 צלם</button></div></div>').join('')}
+  $('foodLog').innerHTML='<div class="card !p-3 text-center mb-3"><div class="text-sm">סה״כ קלוריות מנותחות '+dw+'</div><div class="text-3xl font-black text-amber-600">'+nn(tot)+' <span class="text-base text-slate-500">/ '+(q.cal?'~':'')+fmt(tc)+'</span></div><div class="pbar mt-2"><div class="h-full '+(tot>tc?'bg-red-500':'bg-emerald-500')+'" style="width:'+Math.min(100,Math.round(tot/tc*100))+'%"></div></div>'+(q.cal?'':'<div class="text-xs text-slate-400 mt-1">יעד ברירת מחדל – מלא גיל וגובה בפרופיל להתאמה אישית</div>')+(tot>tc?'<div class="rounded-xl p-2 mt-2 text-sm font-bold" style="background:#FEF2F2;color:#DC2626">חרגת ב-'+fmt(tot-tc)+' קל׳ מהיעד'+(penCalc(d).cal?' · <span dir="ltr">-'+penCalc(d).cal+'</span> 🌾':'')+'</div>':'')+'</div>'+Object.keys(MN).map(id=>'<div class="card mb-3"><div class="font-black text-lg mb-2">'+MN[id][0]+' '+MN[id][1]+'</div>'+(f[id]||[]).map((e,i)=>entHTML(e,id,i,d)).join('')+(FB[id]?'<div class="text-center py-3"><span class="text-3xl animate-bounce inline-block">'+renderAntAvatar(curU().av||0)+'</span><div class="text-sm">מנתח את הארוחה...'+gn()+'</div></div>':'')+(ER[id]?'<div class="text-red-500 text-sm mb-2">'+esc(ER[id])+'</div>':'')+'<textarea id="fi_'+id+'" rows="6" placeholder="מה אכלת או שתית? אפשר לפרט כמה שרוצים (מרכיבים, כמויות, רטבים...)" oninput="DR[\''+id+'\']=this.value" class="mb-2">'+esc(DR[id]||'')+'</textarea><div class="flex items-center gap-2 mb-2"><label class="text-sm">🕒 שעת אכילה:</label><input type="time" id="ft_'+id+'" class="tmi" value="'+(DT[id]||nowHM())+'" onchange="DT[\''+id+'\']=this.value"></div><div class="grid grid-cols-3 gap-2"><button class="btn b-green col-span-2 !p-2 text-sm" onclick="anaMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>שלח לניתוח 🧠</button><button class="btn b-amber !p-2 text-sm" onclick="pickMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>📷 צלם</button></div></div>').join('')}
 function pickMeal(id){if(FB[id]||!needKey())return;MID=id;$('fMeal').click()}
 $('fMeal').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)anaMeal(MID,f)};
 /* ניתוח ארוחה ב-AI – משמש גם את יומן היום וגם את עריכת ימים קודמים */
@@ -827,7 +838,7 @@ function drawED(){if(!ED)return;const d=ED.d,dt=dOf(d),fd=dayFood(d),A=ED.add,CB
   +H('אימונים שבוצעו','dumbbell')+EX.map(e=>CB(ED.ex[e[0]],'ED.ex[\''+e[0]+'\']=this.checked',e[2]+' '+e[1]+' (+15 🌾)')).join('')+T.map(t=>CB(ED.ex[t[0]],'ED.ex[\''+t[0]+'\']=this.checked',t[2]+' '+t[1]+' (+'+t[3]+' 🌾)')).join('')
   +'<button class="btn b-green w-full mt-4" onclick="edSave()">'+ic('save')+'שמור נתוני יום</button><div class="text-xs text-center text-slate-400 mt-1">הגרגרים וצבע היום בלוח מחושבים מחדש בשמירה</div>'
   +H('ארוחות ביום הזה','book')+'<div class="text-xs text-slate-400 mb-2">שינויים בארוחות נשמרים מיד</div>'+(fd.length?fd.map(x=>{const i=(S.fd[d][x.id]||[]).indexOf(x.e),key=x.id+i;return '<div class="rounded-xl bg-slate-50 border border-slate-200 p-2 mb-2"><div class="flex items-center gap-2"><input type="time" class="tmi" value="'+x.t+'" onchange="edMealAt(\''+x.id+'\','+i+',this.value)"><span class="flex-1 text-sm">'+MN[x.id][0]+' '+esc(x.e.t||'(לפי תמונה)')+(x.e.jk?' <span class="rbadge"><span dir="ltr">-30</span> 🌾</span>':'')+'</span><button class="btn '+(ED.del===key?'b-red':'b-stone')+' !p-1 !px-2 text-xs" onclick="edMealDel(\''+x.id+'\','+i+')">'+(ED.del===key?'בטוח? 🗑️':'🗑️')+'</button></div><div class="text-xs text-slate-500 mt-1">~'+fmt(x.e.a.kcal)+' קל׳ · '+MN[x.id][1]+'</div></div>'}).join(''):'<div class="text-sm text-slate-400 mb-2">לא נרשם אוכל ביום הזה</div>')
-  +'<div class="rounded-xl border border-dashed border-slate-300 p-2 mt-2"><div class="font-bold text-sm mb-2">'+ic('plus')+' הוסף ארוחה ליום הזה</div><div class="grid grid-cols-2 gap-2 mb-2"><select onchange="ED.add.id=this.value">'+Object.keys(MN).map(id=>'<option value="'+id+'"'+(A.id===id?' selected':'')+'>'+MN[id][0]+' '+MN[id][1]+'</option>').join('')+'</select><input type="time" value="'+A.at+'" onchange="ED.add.at=this.value"></div><textarea rows="3" placeholder="מה אכלת או שתית?" oninput="ED.add.t=this.value" class="mb-2" style="min-height:5rem">'+esc(A.t)+'</textarea><input type="number" inputmode="numeric" placeholder="קלוריות (השאר ריק לניתוח AI)" value="'+A.k+'" oninput="ED.add.k=this.value" class="mb-2"><button class="btn b-amber w-full !py-2" onclick="edMealAdd()" '+(ED.busy?'disabled':'')+'>'+(ED.busy?'🐜 מנתח...':'הוסף ארוחה')+'</button></div>'
+  +'<div class="rounded-xl border border-dashed border-slate-300 p-2 mt-2"><div class="font-bold text-sm mb-2">'+ic('plus')+' הוסף ארוחה ליום הזה</div><div class="grid grid-cols-2 gap-2 mb-2"><select onchange="ED.add.id=this.value">'+Object.keys(MN).map(id=>'<option value="'+id+'"'+(A.id===id?' selected':'')+'>'+MN[id][0]+' '+MN[id][1]+'</option>').join('')+'</select><input type="time" value="'+A.at+'" onchange="ED.add.at=this.value"></div><textarea rows="3" placeholder="מה אכלת או שתית?" oninput="ED.add.t=this.value" class="mb-2" style="min-height:5rem">'+esc(A.t)+'</textarea><input type="number" inputmode="numeric" placeholder="קלוריות (השאר ריק לניתוח AI)" value="'+A.k+'" oninput="ED.add.k=this.value" class="mb-2"><button class="btn b-amber w-full !py-2" onclick="edMealAdd()" '+(ED.busy?'disabled':'')+'>'+(ED.busy?'<span>מנתח...'+gn()+'</span>':'הוסף ארוחה')+'</button></div>'
   +'<button class="btn b-stone w-full mt-4" onclick="ED=null;closeSheet()">סגור</button>')}
 function edSave(){
   const d=ED.d,o=S.st[d]||{n:0,k:0,g:0,m:0},n=ED.n,kv=ED.k;snap('עריכת יום '+fmtD(d),d);let g=0;
