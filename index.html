@@ -527,10 +527,10 @@ async function calcJ(){
 }
 
 /* Gemini */
-const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת',503:'שרת ה-AI עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה לשירות ה-AI נכשלה');
+const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת',402:'אין יתרת קרדיט בחשבון של ספק הגיבוי',503:'שרת ה-AI עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה לשירות ה-AI נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='',GMt=0,GRT=0;
-const VER='6.6',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=30000,GWAIT=2500,GNT=' (מנסה להתחבר לשרת)';
+const VER='6.7',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=30000,GWAIT=2500,GNT=' (מנסה להתחבר לשרת)';
 const ENG={gemini:'Gemini',groq:'Groq גיבוי',openrouter:'OpenRouter',openai:'OpenAI',perplexity:'Perplexity'};
 const GROQ={url:'https://api.groq.com/openai/v1/chat/completions',text:'llama-3.3-70b-versatile',vision:'meta-llama/llama-4-scout-17b-16e-instruct'};
 /* ספק הגיבוי הנוסף מזוהה אוטומטית לפי תחילת המפתח */
@@ -557,17 +557,38 @@ function toOAI(body,id,model){
   const o={model,messages:msgs};if(json&&(id==='groq'||id==='openai'))o.response_format={type:'json_object'};return o}
 /* ... ובחזרה: מחזיר תשובה במבנה של Gemini, כך שכל שאר הקוד נשאר כמו שהוא */
 function fromOAI(j,body,id){const c=j&&j.choices&&j.choices[0],t=c&&c.message&&c.message.content;
-  let x=Array.isArray(t)?t.map(p=>p.text||'').join(''):String(t==null?'':t);if(!x.trim())return null;
+  let x=Array.isArray(t)?t.map(p=>p.text||'').join(''):String(t==null?'':t);x=x.replace(/<think>[\s\S]*?<\/think>/g,'');if(!x.trim())return null;
   if(id==='perplexity')x=x.replace(/\s*\[\d+\]/g,'');
   if((body.generationConfig||{}).responseMimeType==='application/json'){x=x.replace(/```json|```/g,'').trim();const a=x.indexOf('{'),b=x.lastIndexOf('}');if(a>=0&&b>a)x=x.slice(a,b+1)}
   return {candidates:[{content:{parts:[{text:x.trim()}]}}]}}
-async function callOAI(id,url,key,model,body){
+async function callOAI(id,url,key,model,body,noJson){
+  const ob=toOAI(body,id,model);if(noJson)delete ob.response_format;
   const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),GTO);let r=null,raw='';
-  try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(toOAI(body,id,model)),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
+  try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(ob),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
   catch(e){clearTimeout(tm);return e&&e.name==='AbortError'?{to:1}:{ne:e||new Error('network')}}
   let j=null;try{j=JSON.parse(raw)}catch(e){}
   if(r.ok&&j){const x=fromOAI(j,body,id);return x?{res:x}:{st:502,msg:'תשובה ריקה'}}
+  if(r.status===400&&ob.response_format&&!noJson)return callOAI(id,url,key,model,body,true);   /* חלק מהמודלים לא תומכים ב-json_object – מנסים בלי */
   return {st:r.status,msg:String((j&&j.error&&(j.error.message||j.error.code))||raw.slice(0,200)||'ללא גוף תשובה')}}
+/* Groq: אם המודל שהוגדר לא קיים / אין לו גישה (404 או decommissioned) – מגלים אילו מודלים זמינים למפתח ובוחרים מתאים, ושומרים את הבחירה */
+const GQP=['llama-3.3-70b-versatile','openai/gpt-oss-120b','openai/gpt-oss-20b','meta-llama/llama-4-maverick-17b-128e-instruct','qwen/qwen3-32b','moonshotai/kimi-k2-instruct','llama-3.1-8b-instant'],GQV=['meta-llama/llama-4-scout-17b-16e-instruct','meta-llama/llama-4-maverick-17b-128e-instruct'];
+const gqTag=k=>k.slice(-6),gqPref=(k,img)=>{const c=G.gqp;return c&&c.k===gqTag(k)?c[img?'vision':'text']||null:null};
+const modelGone=o=>o.st===404||(o.st===400&&/decommission|does not exist|not found|do not have access/i.test(String(o.msg)));
+async function gqList(k){const c=G.gqm;if(c&&c.k===gqTag(k)&&Date.now()-c.t<864e5)return c.list;
+  try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),10000),r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+k},signal:ac.signal}),j=await r.json();clearTimeout(tm);
+    if(!r.ok||!Array.isArray(j.data))return null;
+    const list=j.data.filter(m=>m.active!==false&&!/whisper|tts|guard|embed|orpheus|safeguard/i.test(m.id)).map(m=>({id:m.id,cx:m.context_window||0}));
+    G.gqm={k:gqTag(k),t:Date.now(),list};saveG();return list}catch(e){return null}}
+async function gqPick(k,img,skip){const list=await gqList(k);if(!list||!list.length)return null;const ids=list.map(x=>x.id).filter(x=>x!==skip);
+  return (img?(GQV.find(x=>ids.includes(x))||ids.find(x=>/llama-4/.test(x))):(GQP.find(x=>ids.includes(x))||list.filter(x=>x.id!==skip).sort((a,b)=>b.cx-a.cx).map(x=>x.id)[0]))||null}
+async function groqStep(k,img,body,errs){
+  let mdl=gqPref(k,img)||(img?GROQ.vision:GROQ.text),o=await callOAI('groq',GROQ.url,k,mdl,body);
+  if(!o.res&&modelGone(o)){errs.push('Groq ('+mdl+') → '+oerr(o));G.gqp=null;G.gqm=null;
+    const alt=await gqPick(k,img,mdl);
+    if(!alt){errs.push('Groq → לא נמצא בחשבון מודל מתאים'+(img?' לתמונות':''));return {o:{st:404,msg:''},skip:1}}
+    mdl=alt;o=await callOAI('groq',GROQ.url,k,mdl,body);
+    if(o.res){G.gqp=Object.assign({},G.gqp,{k:gqTag(k),[img?'vision':'text']:mdl});saveG()}}
+  return {o,mdl}}
 const oerr=o=>o.to?'timeout ('+GTO/1000+' שניות)':o.ne?'שגיאת רשת: '+((o.ne&&o.ne.message)||o.ne):'HTTP '+o.st+': '+String(o.msg).slice(0,160);
 /* מנוע AI עם גיבוי רב-ספקי:
    שלב 1 – Gemini (gemini-3.8-flash ואז gemini-3.5-flash-lite): 30 שניות לניסיון, ניסיון חוזר אחד על 503 (אחרי 2.5 שניות).
@@ -576,7 +597,7 @@ const oerr=o=>o.to?'timeout ('+GTO/1000+' שניות)':o.ne?'שגיאת רשת: 
 async function callG(body){
   if(!hasKey())throw new Error('לא הוגדר מפתח AI – הוסף מפתח בהגדרות');
   if(navigator.onLine===false)throw new Error('אין חיבור לאינטרנט – בדוק Wi-Fi או נתונים סלולריים ונסה שוב');
-  const errs=[],img=jstr(body).includes('"inline_data"'),wait=ms=>new Promise(z=>setTimeout(z,ms));let last=0,net=0;
+  const errs=[],sts=[],img=jstr(body).includes('"inline_data"'),wait=ms=>new Promise(z=>setTimeout(z,ms));let last=0,net=0;
   try{
     const key=(G.key||'').trim();
     if(key){let ms=GMS.slice();if(GM&&Date.now()-GMt<6e5&&ms.includes(GM))ms=[GM].concat(ms.filter(x=>x!==GM));
@@ -593,20 +614,21 @@ async function callG(body){
           st=to?408:r.status;
           if(st===503&&tries<1){tries++;gNote(1);await wait(GWAIT);continue}
           errs.push(m+' → '+(to?'timeout ('+GTO/1000+' שניות)':'HTTP '+st+(tries?' – '+(tries+1)+' ניסיונות':'')+': '+String((j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה').slice(0,160)));
-          last=st;if(st===404&&GM===m)GM='';
+          last=st;sts.push(st);if(st===404&&GM===m)GM='';
           break}
         if(![404,408,429,500,502,503,504].includes(st))break}}   /* בעיית מפתח / בקשה – אין טעם בעוד מודל של Gemini */
     const gk=(G.groq||'').trim();
-    if(gk){if(errs.length)gNote(1);const mdl=img?GROQ.vision:GROQ.text,o=await callOAI('groq',GROQ.url,gk,mdl,body);
+    if(gk){if(errs.length)gNote(1);const g=await groqStep(gk,img,body,errs),o=g.o;
       if(o.res){o.res._eng='groq';return o.res}
-      errs.push('Groq ('+mdl+') → '+oerr(o));if(o.st)last=o.st;if(o.ne)net++}
+      if(!g.skip)errs.push('Groq ('+g.mdl+') → '+oerr(o));
+      if(o.st){last=o.st;sts.push(o.st)}if(o.ne)net++}
     const ai=altInfo(G.alt);
     if(ai){if(errs.length)gNote(1);
       for(const mdl of ai.models){const o=await callOAI(ai.id,ai.url,String(G.alt).trim(),mdl,body);
         if(o.res){o.res._eng=ai.id;return o.res}
-        errs.push(ai.name+' ('+mdl+') → '+oerr(o));if(o.st)last=o.st;if(o.ne){net++;break}}}
+        errs.push(ai.name+' ('+mdl+') → '+oerr(o));if(o.st){last=o.st;sts.push(o.st)}if(o.ne){net++;break}}}
     if(net&&net===errs.length)throw new Error('שגיאת רשת – לא הצלחתי להגיע לשרתי ה-AI. בדוק את החיבור לאינטרנט, או סינון / VPN שחוסם אותם (למשל generativelanguage.googleapis.com), ונסה שוב. פרטים: '+errs.join(' | '));
-    throw new Error(FR(last)+' — '+errs.join(' | '))
+    throw new Error(FR(sts.find(x=>x===503||x===429||x===408)||last)+' — '+errs.join(' | '))   /* הכותרת: העומס/המכסה של המנוע הראשי חשובים יותר משגיאת חשבון בגיבוי */
   }finally{gNote(0)}}
 function openSettings(){
   sheet('<h3 class="text-xl font-black mb-2 ttl">'+ic('settings')+'הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 mt-3"><div class="ttl mb-1">'+ic('spark')+'מפתחות גיבוי (אופציונלי)</div><div class="text-xs text-slate-500 mb-2">אם Gemini עמוס או חרג מהמכסה, האפליקציה תעבור אוטומטית לגיבוי: קודם Groq ואחריו הספק הנוסף. המפתחות נשמרים על המכשיר ומשותפים לכל הפרופילים.</div><label class="text-sm">Groq API Key (גיבוי מהיר וחינמי)</label><input type="password" class="ltr" id="groqIn" placeholder="gsk_..." value="'+esc(G.groq||'')+'"><label class="text-sm mt-2 block">מפתח OpenRouter / OpenAI / Perplexity</label><input type="password" class="ltr" id="altIn" placeholder="sk-or-... / sk-... / pplx-..." oninput="altHint()" value="'+esc(G.alt||'')+'"><div id="altH" class="text-xs mt-1 text-slate-500"></div></div><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="saveKeys()">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-slate-400 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+(GM||GMS[0])+(G.groq?' · Groq':'')+(altInfo(G.alt)?' · '+altInfo(G.alt).name:'')+'</div>');altHint();
@@ -614,7 +636,7 @@ function openSettings(){
 function altHint(){const v=$('altIn').value.trim(),a=altInfo(v),e=$('altH');e.textContent=!v?'הספק מזוהה אוטומטית לפי תחילת המפתח: sk-or- ← OpenRouter, pplx- ← Perplexity, sk- ← OpenAI':a?'זוהה: '+a.name+' · מודלים: '+a.models.join(' ← '):'הספק לא זוהה – המפתח צריך להתחיל ב-sk-or- או pplx- או sk-';e.style.color=v&&!a?'#DC2626':''}
 function saveKeys(){const k=$('keyIn').value.trim(),g=$('groqIn').value.trim(),a=$('altIn').value.trim();
   if(a&&!altInfo(a)){toast('מפתח הגיבוי לא מזוהה – חייב להתחיל ב-sk-or- או pplx- או sk-');return}
-  G.key=k;G.groq=g;G.alt=a;GM='';saveG();closeSheet();toast('נשמר ✔')}
+  G.key=k;G.groq=g;G.alt=a;GM='';G.gqm=null;G.gqp=null;saveG();closeSheet();toast('נשמר ✔')}
 function resetAll(){sheet('<div class="text-center"><div class="text-5xl mb-2">⚠️</div><p class="text-lg font-black mb-4">האם אתה בטוח שאתה רוצה למחוק את הכל? כל הגרגרים, השלבים, ההיסטוריה והמעקבים של המשתמש הזה יימחקו לצמיתות!</p><div class="space-y-3"><button class="btn b-red w-full" onclick="resetDo()">כן, מחק הכל</button><button class="btn b-stone w-full" onclick="openSettings()">ביטול</button></div></div>')}
 function resetDo(){clearInterval(nt);try{localStorage.removeItem('antfit_u_'+G.cur);localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}location.reload()}
 function needKey(){if(hasKey())return true;openSettings();toast('קודם הוסף מפתח AI בהגדרות');return false}
