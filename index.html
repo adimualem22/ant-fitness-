@@ -142,6 +142,8 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
 .gchip:active{transform:scale(.94)}.gchip>.ic{width:1rem;height:1rem}
 .gchip .gx{display:inline-flex;width:1.6rem;height:1.6rem;border-radius:50%;background:#fff;color:#DC2626;align-items:center;justify-content:center}.gchip .gx .ic{width:.85rem;height:.85rem}
 .entry{display:flex;align-items:center;gap:.5rem;background:#F8FAFC;border:1px solid var(--line);border-radius:14px;padding:.35rem .45rem .35rem .4rem}
+.eng{margin-top:.45rem;font-size:.68rem;color:#94A3B8;display:flex;align-items:center;gap:.25rem;font-weight:500}
+.eng.fb{color:#D97706}.eng .ic{width:.8rem;height:.8rem}
 .gp{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;padding:.2rem .65rem;font-size:.78rem;font-weight:700;white-space:nowrap}
 .gp.up{background:#D1FAE5;color:#047857}.gp.dn{background:#FEE2E2;color:#DC2626}
 .rbadge{display:inline-flex;align-items:center;gap:.25rem;background:#FEE2E2;color:#DC2626;border-radius:999px;padding:.1rem .6rem;font-size:.72rem;font-weight:700;white-space:nowrap}
@@ -202,7 +204,7 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
       <button class="btn w-full" style="background:var(--sky);color:#fff;box-shadow:0 6px 16px rgba(14,165,233,.25)" onclick="drink()"><i data-ic="plus"></i>+1 כוס מים</button>
     </div>
     <div class="grid grid-cols-2 gap-3">
-      <button class="card text-right" onclick="needKey()&&fPlate.click()"><div class="rk mb-3" style="background:#D1FAE5;color:#10B981"><i data-ic="camera"></i></div><div class="font-bold">צלם צלחת</div><div class="sub">עין הנמלה (Gemini)</div></button>
+      <button class="card text-right" onclick="needKey()&&fPlate.click()"><div class="rk mb-3" style="background:#D1FAE5;color:#10B981"><i data-ic="camera"></i></div><div class="font-bold">צלם צלחת</div><div class="sub">עין הנמלה (AI)</div></button>
       <button class="card text-right" onclick="needKey()&&fFridge.click()"><div class="rk mb-3" style="background:#E0F2FE;color:#0EA5E9"><i data-ic="fridge"></i></div><div class="font-bold">סרוק מקרר / רעב</div><div class="sub">רעיונות מהירים</div></button>
     </div>
     <div class="card">
@@ -514,7 +516,7 @@ function junk(n){
 function broke(){sheet('<div class="text-center"><div class="text-5xl mb-2">😔</div><p class="text-lg font-black mb-3">אני עצוב ומאוכזב, אבל אנחנו לא מוותרים! בוא נתקן את זה עכשיו</p></div><label class="text-sm">מה אכלת?</label><input type="text" id="jf" placeholder="למשל: 3 פרוסות פיצה"><button class="btn b-amber w-full mt-3" onclick="calcJ()">חשב תוכנית פיצוי</button>')}
 const TBL=[['פיצה',500],['שוקולד',250],['גלידה',250],['עוגה',350],['עוגיות',250],['צ׳יפס',400],['במבה',300],['קולה',140],['המבורגר',600],['סופגניה',350],['ממתק',120]];
 async function est(f){
-  if(G.key){try{const r=await callG({contents:[{parts:[{text:'הערך קלוריות כוללות בערך למה שנאכל: "'+f+'". החזר JSON בלבד: {"kcal":מספר}'}]}],generationConfig:{responseMimeType:'application/json'}});const k=JSON.parse(r.candidates[0].content.parts[0].text).kcal;if(k>0)return Math.round(k)}catch(e){}}
+  if(hasKey()){try{const r=await callG({contents:[{parts:[{text:'הערך קלוריות כוללות בערך למה שנאכל: "'+f+'". החזר JSON בלבד: {"kcal":מספר}'}]}],generationConfig:{responseMimeType:'application/json'}});const k=JSON.parse(r.candidates[0].content.parts[0].text).kcal;if(k>0)return Math.round(k)}catch(e){}}
   const h=TBL.find(t=>f.includes(t[0].replace('׳',"'"))||f.includes(t[0]));return h?h[1]:300}
 async function calcJ(){
   const f=$('jf').value.trim();if(!f)return;
@@ -525,50 +527,97 @@ async function calcJ(){
 }
 
 /* Gemini */
-const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת Google',503:'השרת של Google עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה ל-Gemini נכשלה');
+const FR=s=>({408:'הבקשה ארכה יותר מדי (timeout) – נסה שוב',400:'הבקשה או מפתח ה-API אינם תקינים',401:'מפתח ה-API לא תקין',403:'למפתח אין הרשאה לשימוש במודל',404:'המודל לא זמין למפתח שלך',429:'חרגת ממכסת הבקשות – נסה שוב בעוד דקה',500:'תקלה זמנית בשרת',503:'שרת ה-AI עמוס כרגע – נסה שוב בעוד רגע'}[s]||'הפנייה לשירות ה-AI נכשלה');
 function notifGuide(){sheet('<div class="text-center"><div class="text-5xl mb-2">🔕</div><p class="text-lg font-bold mb-4">ההתראות חסומות בדפדפן. לחץ על סמל המנעול/ⓘ בשורת הכתובת ואפשר התראות כדי לקבל תזכורות בזמן אמת.</p><button class="btn b-amber w-full" onclick="openSettings()">הבנתי</button></div>')}
 let GM='',GMt=0,GRT=0;
-const VER='6.5',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=35000,GBACK=[5000,10000,20000],GNT=' (מנסה להתחבר לשרת)';
+const VER='6.6',GMS=['gemini-3.8-flash','gemini-3.5-flash-lite'],GAPI='https://generativelanguage.googleapis.com/v1beta/models',GTO=30000,GWAIT=2500,GNT=' (מנסה להתחבר לשרת)';
+const ENG={gemini:'Gemini',groq:'Groq גיבוי',openrouter:'OpenRouter',openai:'OpenAI',perplexity:'Perplexity'};
+const GROQ={url:'https://api.groq.com/openai/v1/chat/completions',text:'llama-3.3-70b-versatile',vision:'meta-llama/llama-4-scout-17b-16e-instruct'};
+/* ספק הגיבוי הנוסף מזוהה אוטומטית לפי תחילת המפתח */
+function altInfo(k){k=String(k||'').trim();
+  if(/^sk-or-/.test(k))return {id:'openrouter',name:'OpenRouter',url:'https://openrouter.ai/api/v1/chat/completions',models:['google/gemini-2.5-flash','openai/gpt-4o-mini']};
+  if(/^pplx-/.test(k))return {id:'perplexity',name:'Perplexity',url:'https://api.perplexity.ai/chat/completions',models:['sonar']};
+  if(/^sk-/.test(k))return {id:'openai',name:'OpenAI',url:'https://api.openai.com/v1/chat/completions',models:['gpt-4o-mini']};
+  return null}
+const hasKey=()=>!!((G.key||'').trim()||(G.groq||'').trim()||altInfo(G.alt));
+const engBadge=e=>e&&ENG[e]?'<div class="eng'+(e==='gemini'?'':' fb')+'">⚡ נענה ע"י '+ENG[e]+'</div>':'';
 /* מציג/מסתיר את "(מנסה להתחבר לשרת)" בכל חיווי טעינה פעיל (יועץ, ניתוח ארוחה, ניתוח תמונה) */
 function gNote(on){GRT=on?1:0;document.querySelectorAll('.gnote').forEach(e=>{e.textContent=GRT?GNT:''})}
 const gn=()=>'<span class="gnote">'+(GRT?GNT:'')+'</span>';
-/* שני מודלים מותרים למפתח הזה: ראשי gemini-3.8-flash וגיבוי gemini-3.5-flash-lite.
-   35 שניות לכל ניסיון. המתנה גדלה בין ניסיונות חוזרים (5, 10, 20 שניות) כדי לעבור גלי עומס: על 503 עד 3 ניסיונות חוזרים (4 בסך הכל),
-   על timeout עד 2 (3 בסך הכל), על 429 אחד – ורק אחר כך מעבר לגיבוי. כל זמן שמנסים שוב, חיווי הטעינה מציג "מנסה להתחבר לשרת". */
+/* המרה מפורמט Gemini (contents / systemInstruction / inline_data) לפורמט OpenAI-compatible שבו משתמשים Groq, OpenRouter, OpenAI ו-Perplexity */
+function toOAI(body,id,model){
+  const json=((body.generationConfig||{}).responseMimeType==='application/json'),msgs=[];
+  let sys=((body.systemInstruction||{}).parts||[]).map(p=>p.text||'').join('\n').trim();
+  if(json)sys=(sys?sys+'\n\n':'')+'החזר אך ורק JSON תקין (JSON), בלי טקסט נוסף ובלי גדרות קוד.';
+  if(sys)msgs.push({role:'system',content:sys});
+  (body.contents||[]).forEach(c=>{const role=c.role==='model'?'assistant':'user',ps=c.parts||[],txt=ps.map(p=>p.text||'').filter(Boolean).join('\n'),im=role==='user'?ps.filter(p=>p.inline_data):[];
+    const part=im.length?[{type:'text',text:txt||'.'}].concat(im.map(p=>({type:'image_url',image_url:{url:'data:'+(p.inline_data.mime_type||'image/jpeg')+';base64,'+p.inline_data.data}}))):txt,L=msgs[msgs.length-1];
+    if(L&&L.role===role){const a=Array.isArray(L.content)?L.content:[{type:'text',text:L.content}],b=Array.isArray(part)?part:[{type:'text',text:part}],m=a.concat(b);L.content=m.every(x=>x.type==='text')?m.map(x=>x.text).join('\n'):m}   /* הודעות עוקבות מאותו תפקיד מתמזגות (חלק מהספקים דורשים החלפה) */
+    else msgs.push({role,content:part})});
+  const o={model,messages:msgs};if(json&&(id==='groq'||id==='openai'))o.response_format={type:'json_object'};return o}
+/* ... ובחזרה: מחזיר תשובה במבנה של Gemini, כך שכל שאר הקוד נשאר כמו שהוא */
+function fromOAI(j,body,id){const c=j&&j.choices&&j.choices[0],t=c&&c.message&&c.message.content;
+  let x=Array.isArray(t)?t.map(p=>p.text||'').join(''):String(t==null?'':t);if(!x.trim())return null;
+  if(id==='perplexity')x=x.replace(/\s*\[\d+\]/g,'');
+  if((body.generationConfig||{}).responseMimeType==='application/json'){x=x.replace(/```json|```/g,'').trim();const a=x.indexOf('{'),b=x.lastIndexOf('}');if(a>=0&&b>a)x=x.slice(a,b+1)}
+  return {candidates:[{content:{parts:[{text:x.trim()}]}}]}}
+async function callOAI(id,url,key,model,body){
+  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),GTO);let r=null,raw='';
+  try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(toOAI(body,id,model)),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
+  catch(e){clearTimeout(tm);return e&&e.name==='AbortError'?{to:1}:{ne:e||new Error('network')}}
+  let j=null;try{j=JSON.parse(raw)}catch(e){}
+  if(r.ok&&j){const x=fromOAI(j,body,id);return x?{res:x}:{st:502,msg:'תשובה ריקה'}}
+  return {st:r.status,msg:String((j&&j.error&&(j.error.message||j.error.code))||raw.slice(0,200)||'ללא גוף תשובה')}}
+const oerr=o=>o.to?'timeout ('+GTO/1000+' שניות)':o.ne?'שגיאת רשת: '+((o.ne&&o.ne.message)||o.ne):'HTTP '+o.st+': '+String(o.msg).slice(0,160);
+/* מנוע AI עם גיבוי רב-ספקי:
+   שלב 1 – Gemini (gemini-3.8-flash ואז gemini-3.5-flash-lite): 30 שניות לניסיון, ניסיון חוזר אחד על 503 (אחרי 2.5 שניות).
+   שלב 2 – Groq (אם נשמר מפתח), שלב 3 – OpenRouter / OpenAI / Perplexity (אם נשמר מפתח) – בכל כישלון (429, 503, 404, timeout, שגיאת רשת...).
+   התשובה מוחזרת במבנה של Gemini, עם השדה _eng שאומר מי ענה. */
 async function callG(body){
-  const key=(G.key||'').trim();let ms=GMS.slice();
-  if(GM&&Date.now()-GMt<6e5&&ms.includes(GM))ms=[GM].concat(ms.filter(x=>x!==GM));
-  const errs=[];let last=0;
+  if(!hasKey())throw new Error('לא הוגדר מפתח AI – הוסף מפתח בהגדרות');
+  if(navigator.onLine===false)throw new Error('אין חיבור לאינטרנט – בדוק Wi-Fi או נתונים סלולריים ונסה שוב');
+  const errs=[],img=jstr(body).includes('"inline_data"'),wait=ms=>new Promise(z=>setTimeout(z,ms));let last=0,net=0;
   try{
-    for(const m of ms){
-      const url=GAPI+'/'+m+':generateContent?key='+encodeURIComponent(key);let tries=0,st=0;
-      for(;;){
-        let r=null,raw='',to=false,ne=null;
-        const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),GTO);
-        try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
-        catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')to=true;else ne=e||new Error('network')}
-        if(ne){/* אין תשובת HTTP בכלל: אין אינטרנט, החיבור נותק (למשל מעבר בין אפליקציות באמצע בקשה) או חסימה. אם יש חיבור – מנסים שוב עד פעמיים */
-          if(navigator.onLine===false)throw new Error('אין חיבור לאינטרנט – בדוק Wi-Fi או נתונים סלולריים ונסה שוב');
-          if(tries<2){const w=GBACK[Math.min(tries,GBACK.length-1)];tries++;gNote(1);await new Promise(z=>setTimeout(z,w));continue}
-          throw new Error('שגיאת רשת – לא הצלחתי להגיע לשרת של Google ('+(tries+1)+' ניסיונות). בדוק את החיבור לאינטרנט, או סינון / VPN שחוסם את generativelanguage.googleapis.com, ונסה שוב. פרטים: '+((ne&&ne.message)||ne))}
-        let j=null;if(r){try{j=JSON.parse(raw)}catch(e){}}
-        if(r&&r.ok&&j){GM=m;GMt=Date.now();return j}
-        st=to?408:r.status;
-        if(tries<(to?2:st===503?3:st===429?1:0)){const w=GBACK[Math.min(tries,GBACK.length-1)];tries++;gNote(1);await new Promise(z=>setTimeout(z,w));continue}
-        const nt=tries?' – '+(tries+1)+' ניסיונות':'';
-        if(to)errs.push(m+' → timeout ('+GTO/1000+' שניות'+nt+')');
-        else errs.push(m+' → HTTP '+st+nt+': '+((j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה').slice(0,160));
-        last=st;if(st===404&&GM===m)GM='';
-        break}
-      if(![404,408,429,500,502,503,504].includes(st))break}
+    const key=(G.key||'').trim();
+    if(key){let ms=GMS.slice();if(GM&&Date.now()-GMt<6e5&&ms.includes(GM))ms=[GM].concat(ms.filter(x=>x!==GM));
+      gem:for(const m of ms){const url=GAPI+'/'+m+':generateContent?key='+encodeURIComponent(key);let tries=0,st=0;
+        for(;;){let r=null,raw='',to=false,ne=null;
+          const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),GTO);
+          try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac.signal});raw=await r.text();clearTimeout(tm)}
+          catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')to=true;else ne=e||new Error('network')}
+          if(ne){if(navigator.onLine===false)throw new Error('אין חיבור לאינטרנט – בדוק Wi-Fi או נתונים סלולריים ונסה שוב');
+            if(tries<1){tries++;gNote(1);await wait(GWAIT);continue}
+            errs.push('Gemini → שגיאת רשת: '+((ne&&ne.message)||ne));net++;break gem}   /* אותו שרת לשני המודלים – עוברים ישר לגיבוי */
+          let j=null;if(r){try{j=JSON.parse(raw)}catch(e){}}
+          if(r&&r.ok&&j){GM=m;GMt=Date.now();j._eng='gemini';return j}
+          st=to?408:r.status;
+          if(st===503&&tries<1){tries++;gNote(1);await wait(GWAIT);continue}
+          errs.push(m+' → '+(to?'timeout ('+GTO/1000+' שניות)':'HTTP '+st+(tries?' – '+(tries+1)+' ניסיונות':'')+': '+String((j&&j.error&&(j.error.message||j.error.status))||raw.slice(0,200)||'ללא גוף תשובה').slice(0,160)));
+          last=st;if(st===404&&GM===m)GM='';
+          break}
+        if(![404,408,429,500,502,503,504].includes(st))break}}   /* בעיית מפתח / בקשה – אין טעם בעוד מודל של Gemini */
+    const gk=(G.groq||'').trim();
+    if(gk){if(errs.length)gNote(1);const mdl=img?GROQ.vision:GROQ.text,o=await callOAI('groq',GROQ.url,gk,mdl,body);
+      if(o.res){o.res._eng='groq';return o.res}
+      errs.push('Groq ('+mdl+') → '+oerr(o));if(o.st)last=o.st;if(o.ne)net++}
+    const ai=altInfo(G.alt);
+    if(ai){if(errs.length)gNote(1);
+      for(const mdl of ai.models){const o=await callOAI(ai.id,ai.url,String(G.alt).trim(),mdl,body);
+        if(o.res){o.res._eng=ai.id;return o.res}
+        errs.push(ai.name+' ('+mdl+') → '+oerr(o));if(o.st)last=o.st;if(o.ne){net++;break}}}
+    if(net&&net===errs.length)throw new Error('שגיאת רשת – לא הצלחתי להגיע לשרתי ה-AI. בדוק את החיבור לאינטרנט, או סינון / VPN שחוסם אותם (למשל generativelanguage.googleapis.com), ונסה שוב. פרטים: '+errs.join(' | '));
     throw new Error(FR(last)+' — '+errs.join(' | '))
   }finally{gNote(0)}}
 function openSettings(){
-  sheet('<h3 class="text-xl font-black mb-2 ttl">'+ic('settings')+'הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="G.key=$(\'keyIn\').value.trim();GM=\'\';save();closeSheet();toast(\'נשמר ✔\')">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-slate-400 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+(GM||GMS[0])+' (אוטומטי)</div>');
+  sheet('<h3 class="text-xl font-black mb-2 ttl">'+ic('settings')+'הגדרות</h3>'+setTop()+'<label class="text-sm">Gemini API Key (משותף לכל המשתמשים)</label><input type="password" class="ltr" id="keyIn" placeholder="AIza..." value="'+esc(G.key||'')+'"><div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 mt-3"><div class="ttl mb-1">'+ic('spark')+'מפתחות גיבוי (אופציונלי)</div><div class="text-xs text-slate-500 mb-2">אם Gemini עמוס או חרג מהמכסה, האפליקציה תעבור אוטומטית לגיבוי: קודם Groq ואחריו הספק הנוסף. המפתחות נשמרים על המכשיר ומשותפים לכל הפרופילים.</div><label class="text-sm">Groq API Key (גיבוי מהיר וחינמי)</label><input type="password" class="ltr" id="groqIn" placeholder="gsk_..." value="'+esc(G.groq||'')+'"><label class="text-sm mt-2 block">מפתח OpenRouter / OpenAI / Perplexity</label><input type="password" class="ltr" id="altIn" placeholder="sk-or-... / sk-... / pplx-..." oninput="altHint()" value="'+esc(G.alt||'')+'"><div id="altH" class="text-xs mt-1 text-slate-500"></div></div><div class="grid grid-cols-2 gap-3 mt-4"><button class="btn b-green" onclick="saveKeys()">שמור</button><button class="btn b-stone" onclick="closeSheet()">סגור</button></div><button class="btn b-red w-full mt-4 text-sm" onclick="resetAll()">איפוס כל הנתונים מחדש 🔄</button><div class="text-xs text-center text-slate-400 mt-3 ltr">Ant Fitness v'+VER+' · Gemini: '+(GM||GMS[0])+(G.groq?' · Groq':'')+(altInfo(G.alt)?' · '+altInfo(G.alt).name:'')+'</div>');altHint();
 }
+function altHint(){const v=$('altIn').value.trim(),a=altInfo(v),e=$('altH');e.textContent=!v?'הספק מזוהה אוטומטית לפי תחילת המפתח: sk-or- ← OpenRouter, pplx- ← Perplexity, sk- ← OpenAI':a?'זוהה: '+a.name+' · מודלים: '+a.models.join(' ← '):'הספק לא זוהה – המפתח צריך להתחיל ב-sk-or- או pplx- או sk-';e.style.color=v&&!a?'#DC2626':''}
+function saveKeys(){const k=$('keyIn').value.trim(),g=$('groqIn').value.trim(),a=$('altIn').value.trim();
+  if(a&&!altInfo(a)){toast('מפתח הגיבוי לא מזוהה – חייב להתחיל ב-sk-or- או pplx- או sk-');return}
+  G.key=k;G.groq=g;G.alt=a;GM='';saveG();closeSheet();toast('נשמר ✔')}
 function resetAll(){sheet('<div class="text-center"><div class="text-5xl mb-2">⚠️</div><p class="text-lg font-black mb-4">האם אתה בטוח שאתה רוצה למחוק את הכל? כל הגרגרים, השלבים, ההיסטוריה והמעקבים של המשתמש הזה יימחקו לצמיתות!</p><div class="space-y-3"><button class="btn b-red w-full" onclick="resetDo()">כן, מחק הכל</button><button class="btn b-stone w-full" onclick="openSettings()">ביטול</button></div></div>')}
 function resetDo(){clearInterval(nt);try{localStorage.removeItem('antfit_u_'+G.cur);localStorage.setItem('antfit_g',JSON.stringify(G))}catch(e){}location.reload()}
-function needKey(){if(G.key)return true;openSettings();toast('קודם הדבק מפתח Gemini');return false}
+function needKey(){if(hasKey())return true;openSettings();toast('קודם הוסף מפתח AI בהגדרות');return false}
 
 /* צ׳אט */
 let CI=null;
@@ -576,7 +625,7 @@ function chGrow(){const e=$('chIn');e.style.height='auto';e.style.height=Math.mi
 function drawChPrev(){const p=$('chPrev');p.classList.toggle('hidden',!CI);p.innerHTML=CI?'<img src="'+CI.th+'" alt="תמונה מצורפת" style="width:3.5rem;height:3.5rem;object-fit:cover;border-radius:12px"><div class="flex-1 text-sm"><b>תמונה מצורפת</b><div class="text-xs text-slate-500">כתוב שאלה, או שלח כמו שהיא</div></div><button class="icb" onclick="CI=null;drawChPrev()" aria-label="הסר תמונה">'+ic('x')+'</button>':''}
 $('fChat').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{CI={b64:await toB64(f),th:'data:image/jpeg;base64,'+await toB64(f,240,.6)};drawChPrev();$('chIn').focus()}catch(x){toast('לא הצלחתי לקרוא את התמונה')}};
 function drawChat(){
-  const m=S.chat.map(x=>'<div class="flex '+(x.r==='user'?'justify-start':'justify-end')+'"><div class="bub '+(x.r==='user'?'u':'m')+'">'+(x.th?'<img src="'+x.th+'" alt="תמונה שצורפה">':'')+esc(x.t)+'</div></div>').join('');
+  const m=S.chat.map(x=>'<div class="flex '+(x.r==='user'?'justify-start':'justify-end')+'"><div class="bub '+(x.r==='user'?'u':'m')+'">'+(x.th?'<img src="'+x.th+'" alt="תמונה שצורפה">':'')+esc(x.t)+(x.r==='model'?engBadge(x.eng):'')+'</div></div>').join('');
   $('msgs').innerHTML=(m||'<div class="text-slate-400 text-sm text-center py-8">שאל אותי כל דילמת אוכל או שתייה 🥗<br>אפשר גם לצלם תפריט, תווית תזונתית, מנה או מכשיר כושר</div>')+(drawChat.busy?'<div class="flex justify-end"><div class="bub m flex items-center gap-2">'+renderAntAvatar(9,26)+'<span>היועץ חושב...'+gn()+'</span></div></div>':'')+(drawChat.err?'<div class="flex justify-end"><div class="bub" style="background:#FEE2E2;color:#DC2626;unicode-bidi:plaintext;font-size:.8rem;word-break:break-word">'+esc(drawChat.err)+'<div class="mt-2"><button class="btn b-amber text-sm" onclick="chatRetry()">'+ic('refresh')+'נסה שוב</button></div></div></div>':'');
   $('msgs').scrollTop=1e6}
 const chTrim=()=>{S.chat=S.chat.slice(-10);while(S.chat[0]&&S.chat[0].r!=='user')S.chat.shift()};
@@ -589,7 +638,7 @@ async function send(t){
 async function askCoach(img){
   drawChat.lastImg=img||null;drawChat.busy=1;drawChat.err='';drawChat();
   try{const last=S.chat.length-1,r=await callG({systemInstruction:{parts:[{text:SYS+ctxTxt()+(img?'\nהמשתמש צירף תמונה להודעה האחרונה (למשל תפריט במסעדה, תווית תזונתית בסופר, מנה או ציוד כושר). פתח בתיאור קצר של מה שזיהית בתמונה, וענה ספציפית עליה ביחס ליעדים שלו, לקלוריות שנותרו לו ולמה שכבר אכל היום. אם התמונה לא ברורה – אמור זאת ובקש צילום נוסף.':'')}]},contents:S.chat.map((x,i)=>({role:x.r,parts:[{text:x.t+(x.th&&!(img&&i===last)?' [להודעה זו צורפה תמונה]':'')}].concat(img&&i===last?[{inline_data:{mime_type:'image/jpeg',data:img.b64}}]:[])}))});
-    S.chat.push({r:'model',t:r.candidates[0].content.parts[0].text.replace(/\*\*/g,'').replace(/^\* /gm,'• ')});chTrim();save()}
+    S.chat.push({r:'model',t:r.candidates[0].content.parts[0].text.replace(/\*\*/g,'').replace(/^\* /gm,'• '),eng:r._eng});chTrim();save()}
   catch(e){drawChat.err=(e&&e.message)||'שגיאת רשת'}
   drawChat.busy=0;drawChat()}
 function chatRetry(){if(drawChat.busy||!needKey())return;const l=S.chat[S.chat.length-1];
@@ -659,7 +708,7 @@ function meal(id){const d=aday();S.meals[d]=S.meals[d]||{};if(S.meals[d][id])ret
 const MN={b:['🍳','ארוחת בוקר'],l:['🥗','ארוחת צהריים'],d:['🥪','ארוחת ערב'],s:['🍎','נשנושי ביניים / בין לבין']};
 let DR={},DT={},FB={},ER={},MID='b';
 const nn=v=>Math.round(+v||0);
-function entHTML(e,id,i,d){const A=e.a,at=e.at||new Date(e.ts).toTimeString().slice(0,5),c=e.jk?'border-red-300':{good:'border-emerald-300',ok:'border-amber-600',heavy:'border-orange-500'}[A.verdict]||'border-slate-200',M=(ic,v,l)=>'<div class="rounded-lg bg-slate-100 p-1">'+ic+'<br><b>'+nn(v)+'</b><br>'+l+'</div>';return '<div class="rounded-2xl border '+c+' bg-slate-50 p-3 mb-3"><div class="flex items-start gap-2"><input type="time" class="tmi" value="'+at+'" onchange="editAt(\''+id+'\','+i+',this.value)"><div class="font-bold flex-1">- '+(e.img?'📷 ':'')+esc(e.t||'(לפי התמונה)')+'</div><button class="xb" onclick="delMeal(\''+id+'\','+i+',\''+d+'\')" aria-label="'+(e.cof?'מחק כוס קפה':'מחק ארוחה')+'">'+ic('trash')+'</button></div>'+(e.jk?'<div class="mt-1"><span class="rbadge"><span dir="ltr">-30</span> 🌾 חריגה תזונתית</span></div>':'')+'<div class="text-xs text-slate-400 mt-1">📅 '+d.split('-').reverse().join('.')+' · ניתן לערוך את השעה</div><div class="grid grid-cols-4 gap-1 text-center text-xs my-2">'+M('🔥',A.kcal,'קל׳')+M('🍬',A.sugar,'סוכר ג׳')+M('🧈',A.fat,'שומן ג׳')+M('💪',A.protein,'חלבון ג׳')+'</div>'+(A.feedback?'<p class="text-sm">'+esc(A.feedback)+'</p>':'')+(A.swap?'<p class="text-sm mt-1">💡 <b>עדיף:</b> '+esc(A.swap)+'</p>':'')+(A.offset?'<p class="text-sm mt-1">🏋️ <b>קיזוז ביתי:</b> '+esc(A.offset)+'</p>':'')+(A.verdict==='good'&&!e.jk?'<div class="text-emerald-600 font-black text-sm mt-1">🌾 +30 גרגרים – ארוחה מעולה!</div>':'')+'</div>'}
+function entHTML(e,id,i,d){const A=e.a,at=e.at||new Date(e.ts).toTimeString().slice(0,5),c=e.jk?'border-red-300':{good:'border-emerald-300',ok:'border-amber-600',heavy:'border-orange-500'}[A.verdict]||'border-slate-200',M=(ic,v,l)=>'<div class="rounded-lg bg-slate-100 p-1">'+ic+'<br><b>'+nn(v)+'</b><br>'+l+'</div>';return '<div class="rounded-2xl border '+c+' bg-slate-50 p-3 mb-3"><div class="flex items-start gap-2"><input type="time" class="tmi" value="'+at+'" onchange="editAt(\''+id+'\','+i+',this.value)"><div class="font-bold flex-1">- '+(e.img?'📷 ':'')+esc(e.t||'(לפי התמונה)')+'</div><button class="xb" onclick="delMeal(\''+id+'\','+i+',\''+d+'\')" aria-label="'+(e.cof?'מחק כוס קפה':'מחק ארוחה')+'">'+ic('trash')+'</button></div>'+(e.jk?'<div class="mt-1"><span class="rbadge"><span dir="ltr">-30</span> 🌾 חריגה תזונתית</span></div>':'')+'<div class="text-xs text-slate-400 mt-1">📅 '+d.split('-').reverse().join('.')+' · ניתן לערוך את השעה</div><div class="grid grid-cols-4 gap-1 text-center text-xs my-2">'+M('🔥',A.kcal,'קל׳')+M('🍬',A.sugar,'סוכר ג׳')+M('🧈',A.fat,'שומן ג׳')+M('💪',A.protein,'חלבון ג׳')+'</div>'+(A.feedback?'<p class="text-sm">'+esc(A.feedback)+'</p>':'')+(A.swap?'<p class="text-sm mt-1">💡 <b>עדיף:</b> '+esc(A.swap)+'</p>':'')+(A.offset?'<p class="text-sm mt-1">🏋️ <b>קיזוז ביתי:</b> '+esc(A.offset)+'</p>':'')+(A.verdict==='good'&&!e.jk?'<div class="text-emerald-600 font-black text-sm mt-1">🌾 +30 גרגרים – ארוחה מעולה!</div>':'')+engBadge(A.eng)+'</div>'}
 function editAt(id,i,v){const d=aday(),l=(S.fd[d]||{})[id],e=l&&l[i];if(!e||!/^\d{2}:\d{2}$/.test(v))return;snap('שעת ארוחה');e.at=v;save();render()}
 function drawFood(){const d=aday(),dw=dWord(d),f=S.fd[d]||{},tot=Object.values(f).flat().reduce((s,e)=>s+((e.a&&+e.a.kcal)||0),0),q=plan(),tc=calTarget();
   $('foodLog').innerHTML='<div class="card !p-3 text-center mb-3"><div class="text-sm">סה״כ קלוריות מנותחות '+dw+'</div><div class="text-3xl font-black text-amber-600">'+nn(tot)+' <span class="text-base text-slate-500">/ '+(q.cal?'~':'')+fmt(tc)+'</span></div><div class="pbar mt-2"><div class="h-full '+(tot>tc?'bg-red-500':'bg-emerald-500')+'" style="width:'+Math.min(100,Math.round(tot/tc*100))+'%"></div></div>'+(q.cal?'':'<div class="text-xs text-slate-400 mt-1">יעד ברירת מחדל – מלא גיל וגובה בפרופיל להתאמה אישית</div>')+(tot>tc?'<div class="rounded-xl p-2 mt-2 text-sm font-bold" style="background:#FEF2F2;color:#DC2626">חרגת ב-'+fmt(tot-tc)+' קל׳ מהיעד'+(penCalc(d).cal?' · <span dir="ltr">-'+penCalc(d).cal+'</span> 🌾':'')+'</div>':'')+'</div>'+Object.keys(MN).map(id=>'<div class="card mb-3"><div class="font-black text-lg mb-2">'+MN[id][0]+' '+MN[id][1]+'</div>'+(f[id]||[]).map((e,i)=>entHTML(e,id,i,d)).join('')+(FB[id]?'<div class="text-center py-3"><span class="text-3xl animate-bounce inline-block">'+renderAntAvatar(curU().av||0)+'</span><div class="text-sm">מנתח את הארוחה...'+gn()+'</div></div>':'')+(ER[id]?'<div class="text-red-500 text-sm mb-2">'+esc(ER[id])+'</div>':'')+'<textarea id="fi_'+id+'" rows="6" placeholder="מה אכלת או שתית? אפשר לפרט כמה שרוצים (מרכיבים, כמויות, רטבים...)" oninput="DR[\''+id+'\']=this.value" class="mb-2">'+esc(DR[id]||'')+'</textarea><div class="flex items-center gap-2 mb-2"><label class="text-sm">🕒 שעת אכילה:</label><input type="time" id="ft_'+id+'" class="tmi" value="'+(DT[id]||nowHM())+'" onchange="DT[\''+id+'\']=this.value"></div><div class="grid grid-cols-3 gap-2"><button class="btn b-green col-span-2 !p-2 text-sm" onclick="anaMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>שלח לניתוח 🧠</button><button class="btn b-amber !p-2 text-sm" onclick="pickMeal(\''+id+'\')" '+(FB[id]?'disabled':'')+'>📷 צלם</button></div></div>').join('')}
@@ -673,7 +722,7 @@ async function aiMeal(id,txt,at,file,d){
   const j=await callG({contents:[{parts}],generationConfig:{responseMimeType:'application/json'}});
   const a=JSON.parse(j.candidates[0].content.parts[0].text.replace(/```json|```/g,''));
   const v=['good','ok','heavy'].includes(a.verdict)?a.verdict:'ok';
-  return {kcal:+a.kcal||0,sugar:+a.sugar||0,fat:+a.fat||0,protein:+a.protein||0,verdict:v,feedback:String(a.feedback||''),swap:String(a.swap||''),offset:String(a.offset||''),junk:a.junk===true||a.junk==='true'}}
+  return {kcal:+a.kcal||0,sugar:+a.sugar||0,fat:+a.fat||0,protein:+a.protein||0,verdict:v,feedback:String(a.feedback||''),swap:String(a.swap||''),offset:String(a.offset||''),junk:a.junk===true||a.junk==='true',eng:j._eng||''}}
 function pushMeal(d,id,e){S.fd[d]=S.fd[d]||{};(S.fd[d][id]=S.fd[d][id]||[]).push(e);S.meals[d]=S.meals[d]||{};S.meals[d][id]=1;Object.keys(S.fd).sort().slice(0,-90).forEach(k=>delete S.fd[k])}
 async function anaMeal(id,file){
   const txt=(DR[id]||'').trim(),uid=G.cur,d=aday(),at=(($('ft_'+id)||{}).value)||DT[id]||nowHM();
@@ -864,7 +913,7 @@ function edMealAt(id,i,v){const d=ED.d,e=((S.fd[d]||{})[id]||[])[i];if(!e||!/^\d
 function edMealDel(id,i){const d=ED.d,e=((S.fd[d]||{})[id]||[])[i],key=id+i;if(!e)return;if(ED.del!==key){ED.del=key;drawED();return}ED.del='';delMeal(id,i,d);drawED()}
 async function edMealAdd(){const d=ED.d,A=ED.add,txt=A.t.trim(),at=A.at||'12:00',uid=G.cur;if(!txt){toast('כתוב מה אכלת');return}
   let a;if(A.k!==''){a={kcal:cl(A.k,0,5000),sugar:0,fat:0,protein:0,verdict:'ok',feedback:'נרשם ידנית בדיעבד',swap:'',offset:''}}
-  else{if(!G.key){toast('הזן קלוריות, או הגדר מפתח Gemini לניתוח אוטומטי');return}ED.busy=1;drawED();try{a=await aiMeal(A.id,txt,at,null,d)}catch(e){if(ED)ED.busy=0;toast((e&&e.message||'שגיאה').slice(0,120));drawED();return}if(!ED||G.cur!==uid)return;ED.busy=0}
+  else{if(!hasKey()){toast('הזן קלוריות, או הגדר מפתח AI בהגדרות לניתוח אוטומטי');return}ED.busy=1;drawED();try{a=await aiMeal(A.id,txt,at,null,d)}catch(e){if(ED)ED.busy=0;toast((e&&e.message||'שגיאה').slice(0,120));drawED();return}if(!ED||G.cur!==uid)return;ED.busy=0}
   const jk=junkTxt(txt)||!!a.junk,g=jk?0:a.verdict==='good'?30:5;snap('ארוחה בדיעבד',d);pushMeal(d,A.id,{ts:Date.now(),at,t:txt,img:false,g,a,jk:jk?1:undefined});ED.add={id:A.id,t:'',at:A.at,k:''};
   add(g,'📓 '+MN[A.id][1]+' נוספה ל-'+fmtD(d),d);drawED()}
 /* אווטאר מהיר */
